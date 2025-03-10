@@ -11,16 +11,16 @@
 Scene::Scene()
 {
 	cube = NULL;
-	mesh = NULL;
+	// mesh = NULL;
 }
 
 Scene::~Scene()
 {
 	if(cube != NULL)
 		delete cube;
-	if(mesh != NULL)
+	for (TriangleMesh *mesh : meshes)
 		delete mesh;
-	if(object != NULL)
+	for (TriangleMeshInstance *object : objects)
 		delete object;
 	for(vector<TriangleMeshInstance *>::iterator it=walls.begin(); it!=walls.end(); it++)
 		delete *it;
@@ -75,22 +75,39 @@ bool Scene::loadMap(const string &filename)
 	}
 	initRoom(mapInfo);
 
-	for (auto a : mapInfo) {
-		for (char c : a) {
-			cout << c;
-		}
-		cout << endl;
-	}
+	// for (auto a : mapInfo) {
+	// 	for (char c : a) {
+	// 		cout << c;
+	// 	}
+	// 	cout << endl;
+	// }
 
 
-	int num_models;	
+	int num_models;
 	fin >> num_models;
+	for (int i = 0; i < num_models; ++i) {
+		fin >> model_filename;
+		loadMesh(model_filename);
+	}
+	std::cout << "Loaded " << num_models << " models." << std::endl;
 
-	fin >> model_filename;
+	int num_instances;
+	fin >> num_instances;
+	for (int i = 0; i < num_instances; ++i) {
+		int meshIndx;
+		glm::vec3 t, s;
+		fin >> meshIndx;
+		fin >> t.x >> t.y >> t.z;
+		fin >> s.x >> s.y >> s.z;
 
-	loadMesh(model_filename);
+		glm::mat4 transform(1.0f);
+		transform = glm::translate(transform, t);
+		transform = glm::scale(transform, s);
 
-	
+		addInstance(meshIndx, transform);
+	}
+	std::cout << "Loaded " << num_instances << " instances." << std::endl;
+
 	
 	fin.close();
 	return true;
@@ -107,21 +124,37 @@ bool Scene::loadMesh(const string &filename)
 
 
 	std::cout << "load mesh f" << std::endl;
-	if(mesh != NULL)
-	{
-		mesh->free();
-		delete mesh;
-	}
-	mesh = new TriangleMesh();
+	// if(mesh != NULL)
+	// {
+	// 	mesh->free();
+	// 	delete mesh;
+	// }
+	TriangleMesh *mesh = new TriangleMesh();
 	bool bSuccess = reader.readMesh(filename, *mesh);
 	if(bSuccess)
 	{
-		object = new TriangleMeshInstance();
-		object->init(mesh, glm::vec4(1.0f), glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
 		mesh->sendToOpenGL();
+
+		// TriangleMeshInstance* object = new TriangleMeshInstance();
+		// object->init(mesh, glm::vec4(1.0f), glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
 	}
+	meshes.push_back(mesh);
 	
 	return bSuccess;
+}
+
+void Scene::addInstance(int mesh, const glm::mat4 &transform)
+{
+	TriangleMeshInstance* object = new TriangleMeshInstance();
+	object->init(meshes[mesh], glm::vec4(1.0f), transform);
+	objects.push_back(object);
+}
+
+void Scene::addInstances(int mesh, const std::vector<glm::mat4> &transform)
+{
+	for (int i = 0; i < transform.size(); ++i) {
+		addInstance(mesh, transform[i]);
+	}
 }
 
 void Scene::update(int deltaTime)
@@ -135,7 +168,8 @@ void Scene::render()
 {
 	camera.render();
  	renderRoom();
- 	object->render();
+	for (TriangleMeshInstance *object : objects)
+ 		object->render();
 }
 
 VectorCamera &Scene::getCamera()
@@ -179,7 +213,7 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 			instance->init(cube, glm::vec4(1.0f), transform);
 			walls.push_back(instance);
 
-			cout << "loaded with x:" << i - ny/2 << " z: " << j - nx/2 << endl;
+			// cout << "loaded with x:" << i - ny/2 << " z: " << j - nx/2 << endl;
 		}
 	}
 
@@ -225,7 +259,3 @@ void Scene::renderRoom()
 	for(vector<TriangleMeshInstance *>::iterator it=walls.begin(); it!=walls.end(); it++)
 		(*it)->render();
 }
-
-
-
-

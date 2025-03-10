@@ -26,6 +26,8 @@ public:
 	void init();
 	bool loadMap(const string &filename);
 	bool loadMesh(const string &filename);
+	void addInstance(int mesh, const glm::mat4& transform);
+	void addInstances(int mesh, const std::vector<glm::mat4>& transform);
 	void update(int deltaTime);
 	void render();
 
@@ -39,11 +41,12 @@ private:
 
 private:
 	VectorCamera camera;
-	TriangleMesh *cube, *mesh;
-	TriangleMeshInstance *object;
+	TriangleMesh *cube;
+	// TriangleMeshInstance *object;
+	vector<TriangleMesh*> meshes;
+	vector<TriangleMeshInstance *> objects;
 	vector<TriangleMeshInstance *> walls;
 	float currentTime;
-
 };
 
 
