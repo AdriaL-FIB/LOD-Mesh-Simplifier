@@ -1,0 +1,6 @@
+3 3
+000
+010
+010
+1
+../models/Armadillo.ply
