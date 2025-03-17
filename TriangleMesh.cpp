@@ -71,6 +71,26 @@ void TriangleMesh::buildCube()
 		addTriangle(faces[3*i], faces[3*i+1], faces[3*i+2]);
 }
 
+const vector<glm::vec3> &TriangleMesh::getVertices() const
+{
+	return vertices;
+}
+
+vector<glm::vec3> &TriangleMesh::getVertices()
+{
+	return vertices;
+}
+
+const vector<int> &TriangleMesh::getTriangles() const
+{
+	return triangles;
+}
+
+vector<int> &TriangleMesh::getTriangles()
+{
+	return triangles;
+}
+
 void TriangleMesh::sendToOpenGL()
 {
 	vector<float> data;
@@ -111,7 +131,7 @@ void TriangleMesh::render() const
 	glBindVertexArray(vao);
 	glEnableVertexAttribArray(posLocation);
 	glEnableVertexAttribArray(normalLocation);
-	glDrawArrays(GL_TRIANGLES, 0, 3 * 2 * 3 * triangles.size() / 3);
+	glDrawArrays(GL_TRIANGLES, 0, triangles.size());
 }
 
 void TriangleMesh::free()

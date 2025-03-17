@@ -32,6 +32,11 @@ public:
 
 	void buildCube();
 	
+	const vector<glm::vec3> &getVertices() const;
+	vector<glm::vec3> &getVertices();
+	const vector<int> &getTriangles() const;
+	vector<int> &getTriangles();
+	
 	void sendToOpenGL();
 	void render() const;
 	void free();
