@@ -3,6 +3,10 @@
 #include "TriangleMesh.h"
 #include "Application.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/hash.hpp"
+
+
 
 using namespace std;
 
@@ -144,6 +148,92 @@ void TriangleMesh::free()
 	vertices.clear();
 	triangles.clear();
 }
+
+TriangleMesh TriangleMesh::getSimplifiedMesh(int gridRes) const
+{
+	pair<glm::vec3, glm::vec3> bb = getBoundingBox();
+	glm::vec3 min = bb.first;
+	glm::vec3 max = bb.second;
+
+
+	std::unordered_map<glm::ivec3, CellInfo> grid;
+
+	for (int ind = 0; ind < vertices.size(); ++ind) {
+		const glm::vec3 &v = vertices[ind];
+		
+		glm::ivec3 gridPos = getGridPos(v, gridRes, min);
+
+		if (grid.count(gridPos) > 0) {
+			CellInfo& ci = grid.at(gridPos);
+			ci.vertexSum += v;
+			ci.vertexCount++;
+		}
+		else {
+			CellInfo ci{v, 1};
+			grid.insert({gridPos, ci});
+		}
+	}
+
+	TriangleMesh m;
+
+	int vertexCount = 0;
+	for (auto& it: grid) {
+		CellInfo& ci = it.second;
+		glm::vec3 vertex(ci.vertexSum / float(ci.vertexCount));
+		ci.outputTriangleId = vertexCount++;
+		m.addVertex(vertex);
+	}
+
+	for (int tri = 0; tri < triangles.size(); tri+=3) {
+		// for(unsigned int vrtx=0; vrtx<3; vrtx++)
+		// {
+		// 	data.push_back(vertices[triangles[tri + vrtx]].x);
+		// 	data.push_back(vertices[triangles[tri + vrtx]].y);
+		// 	data.push_back(vertices[triangles[tri + vrtx]].z);
+
+		// 	data.push_back(normal.x);
+		// 	data.push_back(normal.y);
+		// 	data.push_back(normal.z);
+		// }
+		// TODO
+		
+	}
+
+	return TriangleMesh();
+}
+
+pair<glm::vec3, glm::vec3> TriangleMesh::getBoundingBox() const
+{
+	glm::vec3 min, max;
+	min = max = vertices[0];
+
+	for (int i = 1; i < vertices.size(); ++i) {
+		if (min.x < vertices[i].x)
+			min.x = vertices[i].x;
+		if (min.y < vertices[i].y)
+			min.y = vertices[i].y;
+		if (min.z < vertices[i].z)
+			min.z = vertices[i].z;
+
+		if (max.x > vertices[i].x)
+			max.x = vertices[i].x;
+		if (max.y > vertices[i].y)
+			max.y = vertices[i].y;
+		if (max.z > vertices[i].z)
+			max.z = vertices[i].z;
+	}
+
+	return {min, max};
+}
+
+glm::ivec3 TriangleMesh::getGridPos(const glm::vec3& pos, int gridSize, const glm::vec3& min) const
+{
+	int i = (pos.x - min.x) / gridSize;
+	int j = (pos.y - min.y) / gridSize;
+	int k = (pos.z - min.z) / gridSize;
+    return glm::ivec3(i,j,k);
+}
+
 
 
 

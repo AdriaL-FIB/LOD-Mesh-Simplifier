@@ -7,6 +7,8 @@
 #include <glm/glm.hpp>
 #include "ShaderProgram.h"
 
+#include <unordered_map>
+
 
 using namespace std;
 
@@ -19,6 +21,13 @@ using namespace std;
 
 class TriangleMesh
 {
+private:
+	struct CellInfo
+	{
+		glm::vec3 vertexSum;
+		int vertexCount;
+		int outputTriangleId;
+	};
 
 public:
 	TriangleMesh();
@@ -41,6 +50,10 @@ public:
 	void render() const;
 	void free();
 
+	TriangleMesh getSimplifiedMesh(int gridRes) const;
+
+	pair<glm::vec3, glm::vec3> getBoundingBox() const;
+
 private:
 	vector<glm::vec3> vertices;
 	vector<int> triangles;
@@ -48,7 +61,8 @@ private:
 	GLuint vao;
 	GLuint vbo;
 	GLint posLocation, normalLocation;
-	
+
+	glm::ivec3 getGridPos(const glm::vec3& pos, int gridSize, const glm::vec3& min) const;
 };
 
 
