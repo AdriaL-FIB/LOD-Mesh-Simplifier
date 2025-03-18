@@ -127,16 +127,16 @@ void PLYReader::rescaleModel(vector<float> &plyVertices)
 	size[1] = glm::vec3(-1e10, -1e10, -1e10);
 	for(i=0; i<plyVertices.size(); i+=3)
 	{
-		size[0][0] = glm::min(size[0][0], plyVertices[i]);
-		size[0][1] = glm::min(size[0][1], plyVertices[i+1]);
-		size[0][2] = glm::min(size[0][2], plyVertices[i+2]);
-		size[1][0] = glm::max(size[1][0], plyVertices[i]);
-		size[1][1] = glm::max(size[1][1], plyVertices[i+1]);
-		size[1][2] = glm::max(size[1][2], plyVertices[i+2]);
+		size[0][0] = (glm::min)(size[0][0], plyVertices[i]);
+		size[0][1] = (glm::min)(size[0][1], plyVertices[i+1]);
+		size[0][2] = (glm::min)(size[0][2], plyVertices[i+2]);
+		size[1][0] = (glm::max)(size[1][0], plyVertices[i]);
+		size[1][1] = (glm::max)(size[1][1], plyVertices[i+1]);
+		size[1][2] = (glm::max)(size[1][2], plyVertices[i+2]);
 	}
 	baseCenter = glm::vec3((size[0][0] + size[1][0]) / 2.f, size[0][1], (size[0][2] + size[1][2]) / 2.f);
 
-	float largestSize = glm::max(size[1][0] - size[0][0], glm::max(size[1][1] - size[0][1], size[1][2] - size[0][2]));
+	float largestSize = (glm::max)(size[1][0] - size[0][0], (glm::max)(size[1][1] - size[0][1], size[1][2] - size[0][2]));
 
 	for(i=0; i<plyVertices.size(); i+=3)
 	{
