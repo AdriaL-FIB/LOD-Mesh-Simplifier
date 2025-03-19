@@ -50,7 +50,7 @@ public:
 	void render() const;
 	void free();
 
-	TriangleMesh getSimplifiedMesh(int gridRes) const;
+	TriangleMesh* getSimplifiedMesh(int gridRes) const;
 
 	pair<glm::vec3, glm::vec3> getBoundingBox() const;
 
@@ -62,7 +62,7 @@ private:
 	GLuint vbo;
 	GLint posLocation, normalLocation;
 
-	glm::ivec3 getGridPos(const glm::vec3& pos, int gridSize, const glm::vec3& min) const;
+	glm::ivec3 getGridPos(const glm::vec3& pos, float gridSize, const glm::vec3& min) const;
 };
 
 

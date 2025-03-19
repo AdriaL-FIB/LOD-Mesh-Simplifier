@@ -4,12 +4,20 @@
 00000
 00000
 11111
-1
+3
 ../models/Armadillo.ply
-2
+../models/moai.ply
+../models/dragon.ply
+4
 0
 1 0 1
 1 1 1
 0
 1 0 2
+1 1 1
+1
+1 0 3
+1 1 1
+2
+1 0 -1
 1 1 1

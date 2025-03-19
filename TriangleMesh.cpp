@@ -149,11 +149,13 @@ void TriangleMesh::free()
 	triangles.clear();
 }
 
-TriangleMesh TriangleMesh::getSimplifiedMesh(int gridRes) const
+TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 {
 	pair<glm::vec3, glm::vec3> bb = getBoundingBox();
 	glm::vec3 min = bb.first;
 	glm::vec3 max = bb.second;
+
+	float gridSize = (max.x - min.x) / gridRes;
 
 
 	std::unordered_map<glm::ivec3, CellInfo> grid;
@@ -161,7 +163,7 @@ TriangleMesh TriangleMesh::getSimplifiedMesh(int gridRes) const
 	for (int ind = 0; ind < vertices.size(); ++ind) {
 		const glm::vec3 &v = vertices[ind];
 		
-		glm::ivec3 gridPos = getGridPos(v, gridRes, min);
+		glm::ivec3 gridPos = getGridPos(v, gridSize, min);
 
 		if (grid.count(gridPos) > 0) {
 			CellInfo& ci = grid.at(gridPos);
@@ -174,32 +176,35 @@ TriangleMesh TriangleMesh::getSimplifiedMesh(int gridRes) const
 		}
 	}
 
-	TriangleMesh m;
+	TriangleMesh* m = new TriangleMesh();
 
 	int vertexCount = 0;
 	for (auto& it: grid) {
 		CellInfo& ci = it.second;
 		glm::vec3 vertex(ci.vertexSum / float(ci.vertexCount));
 		ci.outputTriangleId = vertexCount++;
-		m.addVertex(vertex);
+		m->addVertex(vertex);
 	}
 
 	for (int tri = 0; tri < triangles.size(); tri+=3) {
-		// for(unsigned int vrtx=0; vrtx<3; vrtx++)
-		// {
-		// 	data.push_back(vertices[triangles[tri + vrtx]].x);
-		// 	data.push_back(vertices[triangles[tri + vrtx]].y);
-		// 	data.push_back(vertices[triangles[tri + vrtx]].z);
+		std::vector<int> indx(3);
+		for(unsigned int vrtx=0; vrtx<3; vrtx++)
+		{
+			glm::ivec3 gridPos = getGridPos(vertices[triangles[tri + vrtx]], gridSize, min);
+			CellInfo ci = grid.at(gridPos);
+			indx[vrtx] = ci.outputTriangleId; 
+		}
 
-		// 	data.push_back(normal.x);
-		// 	data.push_back(normal.y);
-		// 	data.push_back(normal.z);
-		// }
-		// TODO
-		
+		// Check if all 3 vertices are different
+		bool equal = indx[0] == indx[1] || indx[1] == indx[2] || indx[2] == indx[0];
+		if (!equal) {
+			m->addTriangle(indx[0], indx[1], indx[2]);
+		}
 	}
 
-	return TriangleMesh();
+	cout << "Simplified from " << this->triangles.size() << " to " << m->getTriangles().size() << endl;
+
+	return m;
 }
 
 pair<glm::vec3, glm::vec3> TriangleMesh::getBoundingBox() const
@@ -208,25 +213,25 @@ pair<glm::vec3, glm::vec3> TriangleMesh::getBoundingBox() const
 	min = max = vertices[0];
 
 	for (int i = 1; i < vertices.size(); ++i) {
-		if (min.x < vertices[i].x)
+		if (min.x > vertices[i].x)
 			min.x = vertices[i].x;
-		if (min.y < vertices[i].y)
+		if (min.y > vertices[i].y)
 			min.y = vertices[i].y;
-		if (min.z < vertices[i].z)
+		if (min.z > vertices[i].z)
 			min.z = vertices[i].z;
 
-		if (max.x > vertices[i].x)
+		if (max.x < vertices[i].x)
 			max.x = vertices[i].x;
-		if (max.y > vertices[i].y)
+		if (max.y < vertices[i].y)
 			max.y = vertices[i].y;
-		if (max.z > vertices[i].z)
+		if (max.z < vertices[i].z)
 			max.z = vertices[i].z;
 	}
 
 	return {min, max};
 }
 
-glm::ivec3 TriangleMesh::getGridPos(const glm::vec3& pos, int gridSize, const glm::vec3& min) const
+glm::ivec3 TriangleMesh::getGridPos(const glm::vec3& pos, float gridSize, const glm::vec3& min) const
 {
 	int i = (pos.x - min.x) / gridSize;
 	int j = (pos.y - min.y) / gridSize;

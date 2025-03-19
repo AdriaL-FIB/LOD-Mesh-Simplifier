@@ -59,7 +59,7 @@ bool Scene::loadMap(const string &filename)
 	std::vector<std::vector<char>> mapInfo;
 
 	fin >> nx >> ny;
-	std::string line;
+	std::string line; 
 
 	// read empty line
 	std::getline(fin, line);
@@ -133,12 +133,14 @@ bool Scene::loadMesh(const string &filename)
 	bool bSuccess = reader.readMesh(filename, *mesh);
 	if(bSuccess)
 	{
-		mesh->sendToOpenGL();
+		TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(16);
+		simplifiedMesh->sendToOpenGL();
 
 		// TriangleMeshInstance* object = new TriangleMeshInstance();
 		// object->init(mesh, glm::vec4(1.0f), glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+		meshes.push_back(simplifiedMesh);
 	}
-	meshes.push_back(mesh);
+	delete mesh;
 	
 	return bSuccess;
 }
@@ -216,46 +218,10 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 			// cout << "loaded with x:" << i - ny/2 << " z: " << j - nx/2 << endl;
 		}
 	}
-
-	// // Build model transform matrix, create instance from cube, and add it to walls vector	
-	// transform = glm::mat4(1.0f);
-	// transform = glm::translate(transform, glm::vec3(0.f, -0.5f, 0.f));
-	// transform = glm::scale(transform, glm::vec3(20.f, 1.f, 20.f));
-	// instance = new TriangleMeshInstance();
-	// instance->init(cube, glm::vec4(1.0f), transform);
-	// walls.push_back(instance);
-
-	// transform = glm::mat4(1.0f);
-	// transform = glm::translate(transform, glm::vec3(0.f, 1.f, -9.5f));
-	// transform = glm::scale(transform, glm::vec3(20.f, 2.f, 1.f));
-	// instance = new TriangleMeshInstance();
-	// instance->init(cube, glm::vec4(1.0f), transform);
-	// walls.push_back(instance);
-
-	// transform = glm::mat4(1.0f);
-	// transform = glm::translate(transform, glm::vec3(0.f, 1.f, 9.5f));
-	// transform = glm::scale(transform, glm::vec3(20.f, 2.f, 1.f));
-	// instance = new TriangleMeshInstance();
-	// instance->init(cube, glm::vec4(1.0f), transform);
-	// walls.push_back(instance);
-
-	// transform = glm::mat4(1.0f);
-	// transform = glm::translate(transform, glm::vec3(-9.5f, 1.f, 0.f));
-	// transform = glm::scale(transform, glm::vec3(1.f, 2.f, 20.f));
-	// instance = new TriangleMeshInstance();
-	// instance->init(cube, glm::vec4(1.0f), transform);
-	// walls.push_back(instance);
-
-	// transform = glm::mat4(1.0f);
-	// transform = glm::translate(transform, glm::vec3(9.5f, 1.f, 0.f));
-	// transform = glm::scale(transform, glm::vec3(1.f, 2.f, 20.f));
-	// instance = new TriangleMeshInstance();
-	// instance->init(cube, glm::vec4(1.0f), transform);
-	// walls.push_back(instance);
 }
 
 void Scene::renderRoom()
 {
-	for(vector<TriangleMeshInstance *>::iterator it=walls.begin(); it!=walls.end(); it++)
+	for(vector<TriangleMeshInstance*>::iterator it = walls.begin(); it != walls.end(); it++)
 		(*it)->render();
 }
