@@ -133,7 +133,7 @@ bool Scene::loadMesh(const string &filename)
 	bool bSuccess = reader.readMesh(filename, *mesh);
 	if(bSuccess)
 	{
-		TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(16);
+		TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(64);
 		simplifiedMesh->sendToOpenGL();
 
 		// TriangleMeshInstance* object = new TriangleMeshInstance();

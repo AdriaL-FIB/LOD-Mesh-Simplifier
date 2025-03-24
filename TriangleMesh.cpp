@@ -3,8 +3,6 @@
 #include "TriangleMesh.h"
 #include "Application.h"
 
-#include <Eigen/SVD>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
 
@@ -159,7 +157,7 @@ glm::vec3 TriangleMesh::computeNormalTriangle(int triangleInd) const {
 }
 
 
-void TriangleMesh::computeRepresentative(int method, std::unordered_map<glm::ivec3, CellInfo>& grid, int gridSize, const glm::vec3& min) const {
+void TriangleMesh::computeRepresentative(int method, std::unordered_map<glm::ivec3, CellInfo>& grid, float gridSize, const glm::vec3& min) const {
 	if (method == AVG_METHOD) {
 		for (int ind = 0; ind < vertices.size(); ++ind) {
 			const glm::vec3 &v = vertices[ind];
@@ -176,40 +174,81 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<glm::ive
 				grid.insert({gridPos, ci});
 			}
 		}
+
+		for (auto& it : grid) {
+			CellInfo& ci = it.second;
+			ci.outputVertex = (ci.vertexSum / float(ci.vertexCount));
+		}
 	}
 	else {
 		for (int tri = 0; tri < triangles.size(); tri+=3) {
 			for(unsigned int vrtx=0; vrtx<3; vrtx++) {
 				const glm::vec3 &v = vertices[triangles[tri+vrtx]];
-				glm::vec3 normal = computeNormalTriangle(tri);
+				glm::vec3 n = computeNormalTriangle(tri);
 
 				glm::ivec3 gridPos = getGridPos(v, gridSize, min);
 				glm::vec3 nodeCenter = static_cast<glm::vec3>(gridPos) * float(gridSize) + gridSize/2.f;
 
-				float d = - glm::dot(normal, v - nodeCenter);
+				float d = - glm::dot(n, v - nodeCenter);
 
-				if (grid.count(gridPos) > 0) {
-					CellInfo& ci = grid.at(gridPos);
+				CellInfo* ci;
 
+				if (grid.count(gridPos) == 0) { // Init Q 4x4 matrix
+					CellInfo ci;
+					ci.Q.setZero();
+					grid.insert({ gridPos, ci });
 				}
-				else { // Init Q 4x4 matrix
-					
-				}
+				ci = &grid.at(gridPos);
+				
+				//Eigen::Vector4f n(n.x, n.y, n.z, d);
+				//auto Q = n * n.transpose();
 
+				ci->Q(0,0) += n.x * n.x;
+				ci->Q(0,1) += n.x * n.y;
+				ci->Q(0,2) += n.x * n.z;
+				ci->Q(0,3) += n.x * d;
+
+				ci->Q(1,0) += n.y * n.x;
+				ci->Q(1,1) += n.y * n.y;
+				ci->Q(1,2) += n.y * n.z;
+				ci->Q(1,3) += n.y * d;
+
+				ci->Q(2,0) += n.z * n.x;
+				ci->Q(2,1) += n.z * n.y;
+				ci->Q(2,2) += n.z * n.z;
+				ci->Q(2,3) += n.z * d;
 			}
 		}
-		
-		// Eigen::MatrixXf m = Eigen::MatrixXf();
-		// cout << "Here is the matrix m:" << endl << m << endl;
-		// Eigen::JacobiSVD<Eigen::MatrixXf, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(m);
-		// cout << "Its singular values are:" << endl << svd.singularValues() << endl;
-		// cout << "Its left singular vectors are the columns of the thin U matrix:" << endl << svd.matrixU() << endl;
-		// cout << "Its right singular vectors are the columns of the thin V matrix:" << endl << svd.matrixV() << endl;
-		// Eigen::Vector3f rhs(1, 0, 0);
-		// cout << "Now consider this rhs vector:" << endl << rhs << endl;
-		// cout << "A least-squares solution of m*x = rhs is:" << endl << svd.solve(rhs) << endl;
 
+		for (auto& it : grid) {
+			CellInfo& ci = it.second;
 
+			ci.Q(3, 3) = 1.f;
+
+			Eigen::JacobiSVD<Eigen::Matrix4f, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(ci.Q);
+
+			Eigen::Vector4f sValues = svd.singularValues();
+
+			float threshold = 0.0f;
+			for (int i = 0; i < 4; ++i) {
+				if (sValues(i) > threshold) {
+					sValues(i) = 1 / sValues(i); // INVERT VALUES ABOVE THRESHOLD
+				}
+				//else {
+				//	sValues(i) = 0;
+				//}
+			}
+
+			Eigen::Matrix4f sigmaPseudoInverse = sValues.asDiagonal();
+
+			Eigen::Matrix4f QPseudoInverse = svd.matrixV() * sigmaPseudoInverse * svd.matrixU().transpose();
+
+			Eigen::Vector4f b(0,0,0,1);
+			Eigen::Vector4f p = QPseudoInverse * b;
+
+			glm::vec3 nodeCenter = static_cast<glm::vec3>(it.first) * float(gridSize) + gridSize / 2.f;
+			ci.outputVertex = glm::vec3(p.x(), p.y(), p.z()) + nodeCenter;
+		}
 	}
 }
 
@@ -231,9 +270,8 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 	int vertexCount = 0;
 	for (auto& it: grid) {
 		CellInfo& ci = it.second;
-		glm::vec3 vertex(ci.vertexSum / float(ci.vertexCount));
 		ci.outputVertexId = vertexCount++;
-		m->addVertex(vertex);
+		m->addVertex(ci.outputVertex);
 	}
 
 	for (int tri = 0; tri < triangles.size(); tri+=3) {
@@ -281,11 +319,11 @@ pair<glm::vec3, glm::vec3> TriangleMesh::getBoundingBox() const
 	return {min, max};
 }
 
-glm::ivec3 TriangleMesh::getGridPos(const glm::vec3& pos, float gridSize, const glm::vec3& min) const
+glm::ivec3 TriangleMesh::getGridPos(const glm::vec3& pos, float cellSize, const glm::vec3& min) const
 {
-	int i = (pos.x - min.x) / gridSize;
-	int j = (pos.y - min.y) / gridSize;
-	int k = (pos.z - min.z) / gridSize;
+	int i = (pos.x - min.x) / cellSize;
+	int j = (pos.y - min.y) / cellSize;
+	int k = (pos.z - min.z) / cellSize;
     return glm::ivec3(i,j,k);
 }
 

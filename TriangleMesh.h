@@ -9,6 +9,8 @@
 
 #include <unordered_map>
 
+#include <Eigen/SVD>
+
 
 using namespace std;
 
@@ -28,7 +30,7 @@ private:
 		int vertexCount;
 		int outputVertexId;
 
-		std::vector<std::vector<float>> Q;
+		Eigen::Matrix4f Q;
 		glm::vec3 outputVertex;
 	};
 
@@ -69,7 +71,7 @@ private:
 
 	glm::ivec3 getGridPos(const glm::vec3& pos, float gridSize, const glm::vec3& min) const;
 
-	void computeRepresentative(int method, std::unordered_map<glm::ivec3, CellInfo>& grid, int gridSize,const glm::vec3& min) const;
+	void computeRepresentative(int method, std::unordered_map<glm::ivec3, CellInfo>& grid, float gridSize,const glm::vec3& min) const;
 };
 
 
