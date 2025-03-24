@@ -3,10 +3,13 @@
 #include "TriangleMesh.h"
 #include "Application.h"
 
+#include <Eigen/SVD>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
 
-
+#define AVG_METHOD 0
+#define QEM_METHOD 1
 
 using namespace std;
 
@@ -101,11 +104,7 @@ void TriangleMesh::sendToOpenGL()
 	
 	for(unsigned int tri=0; tri<triangles.size(); tri+=3)
 	{
-		glm::vec3 normal;
-	
-		normal = glm::cross(vertices[triangles[tri+1]] - vertices[triangles[tri]], 
-	                      vertices[triangles[tri+2]] - vertices[triangles[tri]]);
-		normal = glm::normalize(normal);
+		glm::vec3 normal = computeNormalTriangle(tri);
 		for(unsigned int vrtx=0; vrtx<3; vrtx++)
 		{
 			data.push_back(vertices[triangles[tri + vrtx]].x);
@@ -149,6 +148,71 @@ void TriangleMesh::free()
 	triangles.clear();
 }
 
+
+
+glm::vec3 TriangleMesh::computeNormalTriangle(int triangleInd) const {
+	glm::vec3 normal;
+	normal = glm::cross(vertices[triangles[triangleInd+1]] - vertices[triangles[triangleInd]], 
+						vertices[triangles[triangleInd+2]] - vertices[triangles[triangleInd]]);
+	normal = glm::normalize(normal);
+	return normal;
+}
+
+
+void TriangleMesh::computeRepresentative(int method, std::unordered_map<glm::ivec3, CellInfo>& grid, int gridSize, const glm::vec3& min) const {
+	if (method == AVG_METHOD) {
+		for (int ind = 0; ind < vertices.size(); ++ind) {
+			const glm::vec3 &v = vertices[ind];
+			
+			glm::ivec3 gridPos = getGridPos(v, gridSize, min);
+
+			if (grid.count(gridPos) > 0) {
+				CellInfo& ci = grid.at(gridPos);
+				ci.vertexSum += v;
+				ci.vertexCount++;
+			}
+			else {
+				CellInfo ci{v, 1};
+				grid.insert({gridPos, ci});
+			}
+		}
+	}
+	else {
+		for (int tri = 0; tri < triangles.size(); tri+=3) {
+			for(unsigned int vrtx=0; vrtx<3; vrtx++) {
+				const glm::vec3 &v = vertices[triangles[tri+vrtx]];
+				glm::vec3 normal = computeNormalTriangle(tri);
+
+				glm::ivec3 gridPos = getGridPos(v, gridSize, min);
+				glm::vec3 nodeCenter = static_cast<glm::vec3>(gridPos) * float(gridSize) + gridSize/2.f;
+
+				float d = - glm::dot(normal, v - nodeCenter);
+
+				if (grid.count(gridPos) > 0) {
+					CellInfo& ci = grid.at(gridPos);
+
+				}
+				else { // Init Q 4x4 matrix
+					
+				}
+
+			}
+		}
+		
+		// Eigen::MatrixXf m = Eigen::MatrixXf();
+		// cout << "Here is the matrix m:" << endl << m << endl;
+		// Eigen::JacobiSVD<Eigen::MatrixXf, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(m);
+		// cout << "Its singular values are:" << endl << svd.singularValues() << endl;
+		// cout << "Its left singular vectors are the columns of the thin U matrix:" << endl << svd.matrixU() << endl;
+		// cout << "Its right singular vectors are the columns of the thin V matrix:" << endl << svd.matrixV() << endl;
+		// Eigen::Vector3f rhs(1, 0, 0);
+		// cout << "Now consider this rhs vector:" << endl << rhs << endl;
+		// cout << "A least-squares solution of m*x = rhs is:" << endl << svd.solve(rhs) << endl;
+
+
+	}
+}
+
 TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 {
 	pair<glm::vec3, glm::vec3> bb = getBoundingBox();
@@ -160,21 +224,7 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 
 	std::unordered_map<glm::ivec3, CellInfo> grid;
 
-	for (int ind = 0; ind < vertices.size(); ++ind) {
-		const glm::vec3 &v = vertices[ind];
-		
-		glm::ivec3 gridPos = getGridPos(v, gridSize, min);
-
-		if (grid.count(gridPos) > 0) {
-			CellInfo& ci = grid.at(gridPos);
-			ci.vertexSum += v;
-			ci.vertexCount++;
-		}
-		else {
-			CellInfo ci{v, 1};
-			grid.insert({gridPos, ci});
-		}
-	}
+	computeRepresentative(AVG_METHOD, grid, gridSize, min);
 
 	TriangleMesh* m = new TriangleMesh();
 
@@ -182,7 +232,7 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 	for (auto& it: grid) {
 		CellInfo& ci = it.second;
 		glm::vec3 vertex(ci.vertexSum / float(ci.vertexCount));
-		ci.outputTriangleId = vertexCount++;
+		ci.outputVertexId = vertexCount++;
 		m->addVertex(vertex);
 	}
 
@@ -192,7 +242,7 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 		{
 			glm::ivec3 gridPos = getGridPos(vertices[triangles[tri + vrtx]], gridSize, min);
 			CellInfo ci = grid.at(gridPos);
-			indx[vrtx] = ci.outputTriangleId; 
+			indx[vrtx] = ci.outputVertexId; 
 		}
 
 		// Check if all 3 vertices are different

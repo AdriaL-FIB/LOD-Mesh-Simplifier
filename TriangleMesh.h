@@ -26,7 +26,10 @@ private:
 	{
 		glm::vec3 vertexSum;
 		int vertexCount;
-		int outputTriangleId;
+		int outputVertexId;
+
+		std::vector<std::vector<float>> Q;
+		glm::vec3 outputVertex;
 	};
 
 public:
@@ -62,7 +65,11 @@ private:
 	GLuint vbo;
 	GLint posLocation, normalLocation;
 
+	glm::vec3 computeNormalTriangle(int triangleInd) const;
+
 	glm::ivec3 getGridPos(const glm::vec3& pos, float gridSize, const glm::vec3& min) const;
+
+	void computeRepresentative(int method, std::unordered_map<glm::ivec3, CellInfo>& grid, int gridSize,const glm::vec3& min) const;
 };
 
 

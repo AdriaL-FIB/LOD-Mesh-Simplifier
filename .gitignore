@@ -3,3 +3,6 @@ build_release/*
 models/*
 windows/*
 .vscode/*
+
+eigen/*
+!eigen/Eigen
