@@ -12,6 +12,17 @@
 using namespace std;
 
 
+GridKey makeKey(const std::vector<int>& components) {
+	GridKey key(0);
+	int count = (std::min)(int(components.size()), MAX_KEY_DIM);
+	for (int i = 0; i < count; ++i) {
+		key[i] = components[i];
+	}
+	return key;
+}
+
+
+
 TriangleMesh::TriangleMesh()
 {
 	vao = -1;
@@ -157,21 +168,22 @@ glm::vec3 TriangleMesh::computeNormalTriangle(int triangleInd) const {
 }
 
 
-void TriangleMesh::computeRepresentative(int method, std::unordered_map<glm::ivec3, CellInfo>& grid, float gridSize, const glm::vec3& min) const {
+void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey, CellInfo>& grid, float gridSize, const glm::vec3& min) const {
 	if (method == AVG_METHOD) {
 		for (int ind = 0; ind < vertices.size(); ++ind) {
 			const glm::vec3 &v = vertices[ind];
 			
 			glm::ivec3 gridPos = getGridPos(v, gridSize, min);
+			GridKey k = makeKey({ gridPos.x, gridPos.y, gridPos.z }); // new line
 
-			if (grid.count(gridPos) > 0) {
-				CellInfo& ci = grid.at(gridPos);
+			if (grid.count(k) > 0) {
+				CellInfo& ci = grid.at(k);
 				ci.vertexSum += v;
 				ci.vertexCount++;
 			}
 			else {
 				CellInfo ci{v, 1};
-				grid.insert({gridPos, ci});
+				grid.insert({k, ci});
 			}
 		}
 
@@ -187,18 +199,19 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<glm::ive
 				glm::vec3 n = computeNormalTriangle(tri);
 
 				glm::ivec3 gridPos = getGridPos(v, gridSize, min);
+				GridKey k = makeKey({ gridPos.x, gridPos.y, gridPos.z }); // new line
 				glm::vec3 nodeCenter = static_cast<glm::vec3>(gridPos) * float(gridSize) + gridSize/2.f;
 
 				float d = - glm::dot(n, v - nodeCenter);
 
 				CellInfo* ci;
 
-				if (grid.count(gridPos) == 0) { // Init Q 4x4 matrix
+				if (grid.count(k) == 0) { // Init Q 4x4 matrix
 					CellInfo ci;
 					ci.Q.setZero();
-					grid.insert({ gridPos, ci });
+					grid.insert({ k, ci });
 				}
-				ci = &grid.at(gridPos);
+				ci = &grid.at(k);
 				
 				//Eigen::Vector4f n(n.x, n.y, n.z, d);
 				//auto Q = n * n.transpose();
@@ -261,7 +274,7 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 	float gridSize = (max.x - min.x) / gridRes;
 
 
-	std::unordered_map<glm::ivec3, CellInfo> grid;
+	std::unordered_map<GridKey, CellInfo> grid;
 
 	computeRepresentative(AVG_METHOD, grid, gridSize, min);
 
@@ -279,7 +292,8 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 		for(unsigned int vrtx=0; vrtx<3; vrtx++)
 		{
 			glm::ivec3 gridPos = getGridPos(vertices[triangles[tri + vrtx]], gridSize, min);
-			CellInfo ci = grid.at(gridPos);
+			GridKey k = makeKey({ gridPos.x, gridPos.y, gridPos.z });
+			CellInfo ci = grid.at(k);
 			indx[vrtx] = ci.outputVertexId; 
 		}
 

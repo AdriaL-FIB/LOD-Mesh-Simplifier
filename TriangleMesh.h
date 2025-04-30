@@ -14,6 +14,8 @@
 
 using namespace std;
 
+constexpr int MAX_KEY_DIM = 4;
+using GridKey = glm::vec<MAX_KEY_DIM, glm::i32, glm::defaultp>;
 
 // Class TriangleMesh contains the geometry of a mesh built out of triangles.
 // Both the vertices and the triangles are stored in vectors.
@@ -71,7 +73,7 @@ private:
 
 	glm::ivec3 getGridPos(const glm::vec3& pos, float gridSize, const glm::vec3& min) const;
 
-	void computeRepresentative(int method, std::unordered_map<glm::ivec3, CellInfo>& grid, float gridSize,const glm::vec3& min) const;
+	void computeRepresentative(int method, std::unordered_map<GridKey, CellInfo>& grid, float gridSize,const glm::vec3& min) const;
 };
 
 
