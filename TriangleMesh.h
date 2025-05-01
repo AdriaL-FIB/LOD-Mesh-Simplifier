@@ -28,12 +28,11 @@ class TriangleMesh
 private:
 	struct CellInfo
 	{
-		glm::vec3 vertexSum;
-		int vertexCount;
-		int outputVertexId;
-
 		Eigen::Matrix4f Q;
+		glm::vec3 vertexSum = glm::vec3(0);
 		glm::vec3 outputVertex;
+		int vertexCount = 0;
+		int outputVertexId;
 	};
 
 public:

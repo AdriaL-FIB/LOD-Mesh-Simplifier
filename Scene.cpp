@@ -133,11 +133,13 @@ bool Scene::loadMesh(const string &filename)
 	bool bSuccess = reader.readMesh(filename, *mesh);
 	if(bSuccess)
 	{
-		TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(64);
+		TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(8);
 		simplifiedMesh->sendToOpenGL();
+		//mesh->sendToOpenGL();
+		//meshes.push_back(mesh);
 
-		// TriangleMeshInstance* object = new TriangleMeshInstance();
-		// object->init(mesh, glm::vec4(1.0f), glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+		//TriangleMeshInstance* object = new TriangleMeshInstance();
+		//object->init(mesh, glm::vec4(1.0f), glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
 		meshes.push_back(simplifiedMesh);
 	}
 	delete mesh;

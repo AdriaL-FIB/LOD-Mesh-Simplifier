@@ -8,11 +8,13 @@
 
 #define AVG_METHOD 0
 #define QEM_METHOD 1
+#define QEM_NORMALS_METHOD 2
+#define AVG_NORMALS_METHOD 3
 
 using namespace std;
 
 
-GridKey makeKey(const std::vector<int>& components) {
+static GridKey makeKey(const std::vector<int>& components) {
 	GridKey key(0);
 	int count = (std::min)(int(components.size()), MAX_KEY_DIM);
 	for (int i = 0; i < count; ++i) {
@@ -182,8 +184,39 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 				ci.vertexCount++;
 			}
 			else {
-				CellInfo ci{v, 1};
-				grid.insert({k, ci});
+				CellInfo ci;
+				ci.vertexSum = v;
+				ci.vertexCount = 1;
+				grid.insert({ k, ci });
+			}
+		}
+
+		for (auto& it : grid) {
+			CellInfo& ci = it.second;
+			ci.outputVertex = (ci.vertexSum / float(ci.vertexCount));
+		}
+	}
+	else if (method == AVG_NORMALS_METHOD) {
+		for (int tri = 0; tri < triangles.size(); tri += 3) {
+			glm::vec3 n = computeNormalTriangle(tri);
+			for (unsigned int vrtx = 0; vrtx < 3; vrtx++) {
+				const glm::vec3& v = vertices[triangles[tri + vrtx]];
+				glm::ivec3 gridPos = getGridPos(v, cellSize, min);
+				int normalId = (n.x < 0 ? 4 : 0) + (n.y < 0 ? 2 : 0) + (n.z < 0 ? 1 : 0);
+				std::vector<int> components({ gridPos.x, gridPos.y, gridPos.z, normalId });
+				GridKey k = makeKey(components);
+
+				if (grid.count(k) > 0) {
+					CellInfo& ci = grid.at(k);
+					ci.vertexSum += v;
+					ci.vertexCount++;
+				}
+				else {
+					CellInfo ci;
+					ci.vertexSum = v;
+					ci.vertexCount = 1;
+					grid.insert({ k, ci });
+				}
 			}
 		}
 
@@ -194,13 +227,22 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 	}
 	else {
 		for (int tri = 0; tri < triangles.size(); tri+=3) {
+			glm::vec3 n = computeNormalTriangle(tri);
 			for(unsigned int vrtx=0; vrtx<3; vrtx++) {
 				const glm::vec3 &v = vertices[triangles[tri+vrtx]];
-				glm::vec3 n = computeNormalTriangle(tri);
 
+				// create key for map
 				glm::ivec3 gridPos = getGridPos(v, cellSize, min);
-				GridKey k = makeKey({ gridPos.x, gridPos.y, gridPos.z }); // new line
-				glm::vec3 nodeCenter = static_cast<glm::vec3>(gridPos) * float(cellSize) + cellSize/2.f;
+				std::vector<int> components({ gridPos.x, gridPos.y, gridPos.z });
+
+				if (method == QEM_NORMALS_METHOD) { // Group by normals
+					int normalId = (n.x < 0 ? 4 : 0) + (n.y < 0 ? 2 : 0) + (n.z < 0 ? 1 : 0);
+					components.push_back(normalId);
+				}
+				GridKey k = makeKey(components); // new line
+
+
+				glm::vec3 nodeCenter = min + static_cast<glm::vec3>(gridPos) * float(cellSize) + cellSize/2.f;
 
 				float d = - glm::dot(n, v - nodeCenter);
 
@@ -213,8 +255,8 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 				}
 				ci = &grid.at(k);
 				
-				//Eigen::Vector4f n(n.x, n.y, n.z, d);
-				//auto Q = n * n.transpose();
+				//Eigen::Vector4f plane(n.x, n.y, n.z, d);
+				//ci->Q += plane * plane.transpose();
 
 				ci->Q(0,0) += n.x * n.x;
 				ci->Q(0,1) += n.x * n.y;
@@ -230,26 +272,32 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 				ci->Q(2,1) += n.z * n.y;
 				ci->Q(2,2) += n.z * n.z;
 				ci->Q(2,3) += n.z * d;
+
+
 			}
 		}
 
+		// For every "active" cell in grid
 		for (auto& it : grid) {
 			CellInfo& ci = it.second;
 
 			ci.Q(3, 3) = 1.f;
+			//ci.Q.row(3) = Eigen::Vector4f(0.f, 0.f, 0.f, 1.f);
 
 			Eigen::JacobiSVD<Eigen::Matrix4f, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(ci.Q);
 
 			Eigen::Vector4f sValues = svd.singularValues();
 
-			float threshold = 0.0f;
+			float max = 0;
+			float threshold = 1e-2f;
 			for (int i = 0; i < 4; ++i) {
 				if (sValues(i) > threshold) {
 					sValues(i) = 1 / sValues(i); // INVERT VALUES ABOVE THRESHOLD
 				}
-				//else {
-				//	sValues(i) = 0;
-				//}
+				else {
+					sValues(i) = 0;
+				}
+				max = (std::max)(max, sValues(i));
 			}
 
 			Eigen::Matrix4f sigmaPseudoInverse = sValues.asDiagonal();
@@ -259,7 +307,7 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 			Eigen::Vector4f b(0,0,0,1);
 			Eigen::Vector4f p = QPseudoInverse * b;
 
-			glm::vec3 nodeCenter = static_cast<glm::vec3>(it.first) * float(cellSize) + cellSize / 2.f;
+			glm::vec3 nodeCenter = min + static_cast<glm::vec3>(it.first) * float(cellSize) + cellSize / 2.f;
 			ci.outputVertex = glm::vec3(p.x(), p.y(), p.z()) + nodeCenter;
 		}
 	}
@@ -276,7 +324,8 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 
 	std::unordered_map<GridKey, CellInfo> grid;
 
-	computeRepresentative(AVG_METHOD, grid, cellSize, min);
+	constexpr int method = QEM_NORMALS_METHOD;
+	computeRepresentative(method, grid, cellSize, min);
 
 	TriangleMesh* m = new TriangleMesh();
 
@@ -289,11 +338,18 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 
 	for (int tri = 0; tri < triangles.size(); tri+=3) {
 		std::vector<int> indx(3);
+		glm::vec3 n = computeNormalTriangle(tri);
 		for(unsigned int vrtx=0; vrtx<3; vrtx++)
 		{
 			glm::ivec3 gridPos = getGridPos(vertices[triangles[tri + vrtx]], cellSize, min);
-			GridKey k = makeKey({ gridPos.x, gridPos.y, gridPos.z });
-			CellInfo ci = grid.at(k);
+			std::vector<int> components({ gridPos.x, gridPos.y, gridPos.z });
+			if (method == QEM_NORMALS_METHOD || method == AVG_NORMALS_METHOD) {
+				int normalId = (n.x < 0 ? 4 : 0) + (n.y < 0 ? 2 : 0) + (n.z < 0 ? 1 : 0);
+				components.push_back(normalId);
+			}
+			GridKey k = makeKey(components);
+			
+			CellInfo& ci = grid.at(k);
 			indx[vrtx] = ci.outputVertexId; 
 		}
 
@@ -340,7 +396,3 @@ glm::ivec3 TriangleMesh::getGridPos(const glm::vec3& pos, float cellSize, const 
 	int k = (pos.z - min.z) / cellSize;
     return glm::ivec3(i,j,k);
 }
-
-
-
-
