@@ -288,7 +288,6 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 
 			Eigen::Vector4f sValues = svd.singularValues();
 
-			float max = 0;
 			float threshold = 1e-2f;
 			for (int i = 0; i < 4; ++i) {
 				if (sValues(i) > threshold) {
@@ -297,7 +296,6 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 				else {
 					sValues(i) = 0;
 				}
-				max = (std::max)(max, sValues(i));
 			}
 
 			Eigen::Matrix4f sigmaPseudoInverse = sValues.asDiagonal();
