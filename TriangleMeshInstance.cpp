@@ -5,7 +5,9 @@
 
 TriangleMeshInstance::TriangleMeshInstance()
 {
+	meshLODs = NULL;
 	mesh = NULL;
+	lod = 0;
 }
 
 TriangleMeshInstance::~TriangleMeshInstance()
@@ -13,32 +15,78 @@ TriangleMeshInstance::~TriangleMeshInstance()
 }
 
 
-void TriangleMeshInstance::init(TriangleMesh *mesh, const glm::vec4 &color, const glm::mat4 &transform)
+void TriangleMeshInstance::init(std::vector<TriangleMesh*>* meshLODs, const glm::vec4 &color, const glm::mat4 &transform)
 {
+	this->mesh = nullptr;
+	this->meshLODs = meshLODs;
+	this->color = color;
+	this->transform = transform;
+}
+
+void TriangleMeshInstance::init(TriangleMesh* mesh, const glm::vec4& color, const glm::mat4& transform)
+{
+	this->meshLODs = nullptr;
 	this->mesh = mesh;
 	this->color = color;
 	this->transform = transform;
 }
 
+
 void TriangleMeshInstance::render()
 {
-	if(mesh != NULL)
-	{
+	if (meshLODs != NULL) {
  		Application::instance().getShader()->setUniform4f("color", color.r, color.g, color.b, color.a);
+		Application::instance().getShader()->setUniformMatrix4f("model", transform);
+		meshLODs->at(lod)->render();
+	}
+	else if (mesh != nullptr) {
+		Application::instance().getShader()->setUniform4f("color", color.r, color.g, color.b, color.a);
 		Application::instance().getShader()->setUniformMatrix4f("model", transform);
 		mesh->render();
 	}
 }
 
-TriangleMesh *TriangleMeshInstance::getMesh()
+TriangleMesh* TriangleMeshInstance::getMesh()
 {
-	return mesh;
+	if (meshLODs != nullptr)
+		return meshLODs->at(this->lod);
+	else
+		return mesh;
+}
+
+TriangleMesh* TriangleMeshInstance::getMesh(int lod)
+{
+	if (meshLODs != nullptr)
+		return meshLODs->at(lod);
+	else
+		return mesh;
 }
 
 void TriangleMeshInstance::setMesh(TriangleMesh* mesh)
 {
+	this->meshLODs = nullptr;
 	this->mesh = mesh;
 }
+
+void TriangleMeshInstance::setMesh(std::vector<TriangleMesh*>* meshLODs)
+{
+	this->mesh = nullptr;
+	this->meshLODs = meshLODs;
+}
+
+void TriangleMeshInstance::setLod(int lod)
+{
+	this->lod = lod;
+}
+
+int TriangleMeshInstance::lodCount() const
+{
+	if (meshLODs != nullptr)
+		return meshLODs->size();
+	else
+		return 0;
+}
+
 
 void TriangleMeshInstance::setTransform(const glm::mat4 &transform)
 {

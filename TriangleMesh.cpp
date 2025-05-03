@@ -322,7 +322,7 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 
 	std::unordered_map<GridKey, CellInfo> grid;
 
-	constexpr int method = QEM_NORMALS_METHOD;
+	constexpr int method = AVG_METHOD;
 	computeRepresentative(method, grid, cellSize, min);
 
 	TriangleMesh* m = new TriangleMesh();

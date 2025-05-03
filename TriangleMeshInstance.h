@@ -13,11 +13,17 @@ public:
 	TriangleMeshInstance();
 	~TriangleMeshInstance();
 	
-	void init(TriangleMesh *mesh, const glm::vec4 &color = glm::vec4(1.0f), const glm::mat4 &transform = glm::mat4(1.0f));
+	void init(std::vector<TriangleMesh*>* meshLODs, const glm::vec4& color = glm::vec4(1.0f), const glm::mat4& transform = glm::mat4(1.0f));
+	void init(TriangleMesh* mesh, const glm::vec4 &color = glm::vec4(1.0f), const glm::mat4 &transform = glm::mat4(1.0f));
 	void render();
 	
 	TriangleMesh* getMesh();
+	TriangleMesh* getMesh(int lod);
 	void setMesh(TriangleMesh* mesh);
+	void setMesh(std::vector<TriangleMesh*>* meshLODs);
+	void setLod(int lod);
+
+	int lodCount() const;
 	
 	void setTransform(const glm::mat4 &transform);
 	const glm::mat4 &getTransform() const;
@@ -32,7 +38,9 @@ public:
 	const glm::vec4 &getColor() const;
 	
 private:
-	TriangleMesh *mesh;
+	TriangleMesh* mesh;
+	std::vector<TriangleMesh*>* meshLODs;
+	int lod;
 	glm::vec4 color;
 	glm::mat4 transform;
 

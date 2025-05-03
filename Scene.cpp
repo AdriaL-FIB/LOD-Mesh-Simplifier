@@ -8,7 +8,7 @@
 #include "Application.h"
 
 
-#define MAX_COST 2000
+#define MAX_COST 1000000
 
 
 Scene::Scene()
@@ -147,7 +147,7 @@ bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes)
 	bool bSuccess = reader.readMesh(filename, *mesh);
 	if(bSuccess)
 	{
-
+		mesh->sendToOpenGL();
 		std::vector<TriangleMesh*> meshLods(lodRes.size() + 1);
 		meshLods[0] = mesh;
 		for (int i = 0; i < lodRes.size(); ++i) {
@@ -171,7 +171,7 @@ bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes)
 void Scene::addInstance(int mesh, const glm::mat4 &transform)
 {
 	TriangleMeshInstance* object = new TriangleMeshInstance();
-	object->init(meshes[mesh][0], glm::vec4(1.0f), transform);
+	object->init(&meshes[mesh], glm::vec4(1.0f), transform);
 	objects.push_back(object);
 }
 
@@ -206,19 +206,19 @@ VectorCamera &Scene::getCamera()
 
 float Scene::computeBenefit(TriangleMeshInstance* object, int lod)
 {
-	TriangleMesh* mesh = object->getMesh();
+	TriangleMesh* mesh = object->getMesh(lod);
 	pair<glm::vec3, glm::vec3> bb = mesh->getBoundingBox();
 	glm::vec3 min = bb.first;
 	glm::vec3 max = bb.second;
 	float diagonal = glm::distance(min, max);
 
 	glm::vec3 position = object->getTransform()[3];
-	glm::vec3 center = (min + max) / 2.f;
+	glm::vec3 center = (min + max) / 2.f + position;
 
 	glm::vec3 viewPoint = camera.getPosition();
 	float distance = glm::distance(center, viewPoint);
 
-	return benefit(diagonal, distance, lod);
+	return benefit(diagonal, distance, object->lodCount() - 1 - lod);
 }
 
 void Scene::computeLODLevels()
@@ -233,14 +233,15 @@ void Scene::computeLODLevels()
 	std::vector<float> benefits(N);
 
 	for (int i = 0; i < N; ++i) {
-		int maxLod = meshes[i].size() - 1;
+		int maxLod = objects[i]->lodCount() - 1;
 
 		TriangleMeshInstance* object = objects[i];
-		TriangleMesh* mesh = meshes[i][maxLod];
-		lods[i] = maxLod - 1;
+		TriangleMesh* mesh = object->getMesh(maxLod);
+		lods[i] = maxLod;
 		costs[i] = mesh->getTriangles().size();
 		benefits[i] = computeBenefit(object, maxLod);
 		totalCost += costs[i];
+		objects[i]->setLod(maxLod);
 	}
 
 	while (totalCost < maxCost) {
@@ -257,7 +258,7 @@ void Scene::computeLODLevels()
 			float currentBenefit = benefits[i];
 
 			TriangleMeshInstance* object = objects[i];
-			TriangleMesh* mesh = meshes[i][nextLod];
+			TriangleMesh* mesh = object->getMesh(nextLod);
 
 			int nextCost = mesh->getTriangles().size();
 			float nextBenefit = computeBenefit(object, nextLod);
@@ -272,21 +273,21 @@ void Scene::computeLODLevels()
 
 		if (best < 0) break;
 
-		// Increase LOD for that object
+		// Increase level of detail for that object (decrease variable)
 		lods[best]--;
-		TriangleMesh* newMesh = meshes[best][lods[best]];
-		objects[best]->setMesh(newMesh);
+		objects[best]->setLod(lods[best]);
 
 		// Update total cost
-		int newCost = newMesh->getTriangles().size(); // cost of the new LOD
+		int newCost = objects[best]->getMesh()->getTriangles().size(); // cost of the new LOD
 		totalCost += newCost - costs[best]; // increment of cost
 		benefits[best] = benefitOfBest; // update benefit of object with new LOD
 		costs[best] = newCost; // update cost of of object with new LOD
 	}
-	cout << "LODS:";
-	for (int lod : lods)
-		cout << " " << lod;
-	cout << endl;
+	//cout << "LODS:";
+	//for (int i = 0; i < N; ++i) {
+	//	cout << " " << lods[i];
+	//}
+	//cout << endl;
 }
 
 // Init & render the room. Both the floor and the walls are instances of the
