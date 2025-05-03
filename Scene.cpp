@@ -244,7 +244,9 @@ void Scene::computeLODLevels()
 		objects[i]->setLod(maxLod);
 	}
 
-	while (totalCost < maxCost) {
+	if (totalCost >= maxCost) return;
+
+	while (true) {
 		// Find object with largest delta benefit / delta cost
 		int best = -1; // LOD to increase
 		float bestRatio = 0;
@@ -261,9 +263,13 @@ void Scene::computeLODLevels()
 			TriangleMesh* mesh = object->getMesh(nextLod);
 
 			int nextCost = mesh->getTriangles().size();
+			int deltaCost = (nextCost - currentCost);
+
+			if (totalCost + deltaCost >= maxCost) continue;
+
 			float nextBenefit = computeBenefit(object, nextLod);
 
-			float ratio = (nextBenefit - currentBenefit) / (nextCost - currentCost);
+			float ratio = (nextBenefit - currentBenefit) / deltaCost;
 			if (ratio > bestRatio) {
 				bestRatio = ratio;
 				best = i;
@@ -287,7 +293,7 @@ void Scene::computeLODLevels()
 	//for (int i = 0; i < N; ++i) {
 	//	cout << " " << lods[i];
 	//}
-	//cout << endl;
+	//cout << " totalCost:" << totalCost << endl;
 }
 
 // Init & render the room. Both the floor and the walls are instances of the
