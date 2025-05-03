@@ -8,6 +8,9 @@
 #include "Application.h"
 
 
+#define MAX_COST 2000
+
+
 Scene::Scene()
 {
 	cube = NULL;
@@ -18,8 +21,9 @@ Scene::~Scene()
 {
 	if(cube != NULL)
 		delete cube;
-	for (TriangleMesh *mesh : meshes)
-		delete mesh;
+	for (std::vector<TriangleMesh*> meshLods : meshes)
+		for (TriangleMesh* mesh : meshLods)
+			delete mesh;
 	for (TriangleMeshInstance *object : objects)
 		delete object;
 	for(vector<TriangleMeshInstance *>::iterator it=walls.begin(); it!=walls.end(); it++)
@@ -82,12 +86,22 @@ bool Scene::loadMap(const string &filename)
 	// 	cout << endl;
 	// }
 
-
 	int num_models;
 	fin >> num_models;
+
+	// read empty line
+	std::getline(fin, line);
+
 	for (int i = 0; i < num_models; ++i) {
-		fin >> model_filename;
-		loadMesh(model_filename);
+		std::getline(fin, line);
+		std::stringstream ss(line);
+		ss >> model_filename;
+		int gridRes;
+		std::vector<int> lodRes;
+		while (ss >> gridRes) {
+			lodRes.push_back(gridRes);
+		}
+		loadMesh(model_filename, lodRes);
 	}
 	std::cout << "Loaded " << num_models << " models." << std::endl;
 
@@ -115,7 +129,7 @@ bool Scene::loadMap(const string &filename)
 
 // Loads the mesh into CPU memory and sends it to GPU memory (using GL)
 
-bool Scene::loadMesh(const string &filename)
+bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes)
 {
 #pragma warning( push )
 #pragma warning( disable : 4101)
@@ -133,16 +147,23 @@ bool Scene::loadMesh(const string &filename)
 	bool bSuccess = reader.readMesh(filename, *mesh);
 	if(bSuccess)
 	{
-		TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(8);
-		simplifiedMesh->sendToOpenGL();
+
+		std::vector<TriangleMesh*> meshLods(lodRes.size() + 1);
+		meshLods[0] = mesh;
+		for (int i = 0; i < lodRes.size(); ++i) {
+			TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(lodRes[i]);
+			simplifiedMesh->sendToOpenGL();
+			meshLods[i+1] = simplifiedMesh;
+		}
 		//mesh->sendToOpenGL();
 		//meshes.push_back(mesh);
 
 		//TriangleMeshInstance* object = new TriangleMeshInstance();
 		//object->init(mesh, glm::vec4(1.0f), glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-		meshes.push_back(simplifiedMesh);
+
+		// Push all LODs of the mesh
+		meshes.push_back(meshLods);
 	}
-	delete mesh;
 	
 	return bSuccess;
 }
@@ -150,7 +171,7 @@ bool Scene::loadMesh(const string &filename)
 void Scene::addInstance(int mesh, const glm::mat4 &transform)
 {
 	TriangleMeshInstance* object = new TriangleMeshInstance();
-	object->init(meshes[mesh], glm::vec4(1.0f), transform);
+	object->init(meshes[mesh][0], glm::vec4(1.0f), transform);
 	objects.push_back(object);
 }
 
@@ -164,6 +185,7 @@ void Scene::addInstances(int mesh, const std::vector<glm::mat4> &transform)
 void Scene::update(int deltaTime)
 {
 	currentTime += deltaTime;
+	computeLODLevels();
 }
 
 // Render the scene. First the room, then the mesh it there is one loaded.
@@ -181,9 +203,94 @@ VectorCamera &Scene::getCamera()
 	return camera;
 }
 
+
+float Scene::computeBenefit(TriangleMeshInstance* object, int lod)
+{
+	TriangleMesh* mesh = object->getMesh();
+	pair<glm::vec3, glm::vec3> bb = mesh->getBoundingBox();
+	glm::vec3 min = bb.first;
+	glm::vec3 max = bb.second;
+	float diagonal = glm::distance(min, max);
+
+	glm::vec3 position = object->getTransform()[3];
+	glm::vec3 center = (min + max) / 2.f;
+
+	glm::vec3 viewPoint = camera.getPosition();
+	float distance = glm::distance(center, viewPoint);
+
+	return benefit(diagonal, distance, lod);
+}
+
+void Scene::computeLODLevels()
+{
+	float totalCost = 0;
+	float maxCost = MAX_COST;
+
+	int N = objects.size();
+
+	std::vector<int> costs(N);
+	std::vector<int> lods(N);
+	std::vector<float> benefits(N);
+
+	for (int i = 0; i < N; ++i) {
+		int maxLod = meshes[i].size() - 1;
+
+		TriangleMeshInstance* object = objects[i];
+		TriangleMesh* mesh = meshes[i][maxLod];
+		lods[i] = maxLod - 1;
+		costs[i] = mesh->getTriangles().size();
+		benefits[i] = computeBenefit(object, maxLod);
+		totalCost += costs[i];
+	}
+
+	while (totalCost < maxCost) {
+		// Find object with largest delta benefit / delta cost
+		int best = -1; // LOD to increase
+		float bestRatio = 0;
+		float benefitOfBest = 0;
+		for (int i = 0; i < N; ++i) {
+			int currentLod = lods[i];
+			int nextLod = currentLod - 1;
+			if (nextLod < 0) continue;
+
+			int currentCost = costs[i];
+			float currentBenefit = benefits[i];
+
+			TriangleMeshInstance* object = objects[i];
+			TriangleMesh* mesh = meshes[i][nextLod];
+
+			int nextCost = mesh->getTriangles().size();
+			float nextBenefit = computeBenefit(object, nextLod);
+
+			float ratio = (nextBenefit - currentBenefit) / (nextCost - currentCost);
+			if (ratio > bestRatio) {
+				bestRatio = ratio;
+				best = i;
+				benefitOfBest = nextBenefit;
+			}
+		}
+
+		if (best < 0) break;
+
+		// Increase LOD for that object
+		lods[best]--;
+		TriangleMesh* newMesh = meshes[best][lods[best]];
+		objects[best]->setMesh(newMesh);
+
+		// Update total cost
+		int newCost = newMesh->getTriangles().size(); // cost of the new LOD
+		totalCost += newCost - costs[best]; // increment of cost
+		benefits[best] = benefitOfBest; // update benefit of object with new LOD
+		costs[best] = newCost; // update cost of of object with new LOD
+	}
+	cout << "LODS:";
+	for (int lod : lods)
+		cout << " " << lod;
+	cout << endl;
+}
+
 // Init & render the room. Both the floor and the walls are instances of the
 // same initial cube scaled and translated to build the room.
-
 void Scene::initRoom(const std::vector<std::vector<char>>& map)
 {
 	std::cout << "init room f" << std::endl;

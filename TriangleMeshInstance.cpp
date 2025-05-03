@@ -35,6 +35,11 @@ TriangleMesh *TriangleMeshInstance::getMesh()
 	return mesh;
 }
 
+void TriangleMeshInstance::setMesh(TriangleMesh* mesh)
+{
+	this->mesh = mesh;
+}
+
 void TriangleMeshInstance::setTransform(const glm::mat4 &transform)
 {
 	this->transform = transform;

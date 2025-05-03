@@ -87,6 +87,11 @@ void VectorCamera::strafe(float distance)
 	computeViewMatrix();
 }
 
+glm::vec3 VectorCamera::getPosition() const
+{
+	return position;
+}
+
 // Recompute the view matrix with the transformations needed to capture
 // the current position and orientation of the vector camera
 

@@ -24,6 +24,8 @@ public:
 	void moveForward(float distance);
 	void strafe(float distance);
 
+	glm::vec3 getPosition() const;
+
 	glm::mat4 &getProjectionMatrix();
 	glm::mat4 &getViewMatrix();
 	

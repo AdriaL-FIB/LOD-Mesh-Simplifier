@@ -16,7 +16,8 @@ public:
 	void init(TriangleMesh *mesh, const glm::vec4 &color = glm::vec4(1.0f), const glm::mat4 &transform = glm::mat4(1.0f));
 	void render();
 	
-	TriangleMesh *getMesh();
+	TriangleMesh* getMesh();
+	void setMesh(TriangleMesh* mesh);
 	
 	void setTransform(const glm::mat4 &transform);
 	const glm::mat4 &getTransform() const;

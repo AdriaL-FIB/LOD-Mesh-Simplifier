@@ -25,7 +25,7 @@ public:
 
 	void init();
 	bool loadMap(const string &filename);
-	bool loadMesh(const string &filename);
+	bool loadMesh(const string &filename, const std::vector<int>& lodRes);
 	void addInstance(int mesh, const glm::mat4& transform);
 	void addInstances(int mesh, const std::vector<glm::mat4>& transform);
 	void update(int deltaTime);
@@ -34,7 +34,11 @@ public:
 	VectorCamera &getCamera();
 
 private:
-	void computeModelViewMatrix();
+	//void computeModelViewMatrix();
+	inline float benefit(float diagonal, float distance, int lod) const { return 1 - diagonal / (std::powf(2, lod) * distance); }
+
+	float computeBenefit(TriangleMeshInstance* mesh, int lod);
+	void computeLODLevels();
 	
 	void initRoom(const std::vector<std::vector<char>>& mapInfo);
 	void renderRoom();
@@ -43,7 +47,7 @@ private:
 	VectorCamera camera;
 	TriangleMesh *cube;
 	// TriangleMeshInstance *object;
-	vector<TriangleMesh*> meshes;
+	vector<vector<TriangleMesh*>> meshes;
 	vector<TriangleMeshInstance *> objects;
 	vector<TriangleMeshInstance *> walls;
 	float currentTime;
