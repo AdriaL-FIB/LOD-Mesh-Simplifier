@@ -34,8 +34,13 @@ void TriangleMeshInstance::init(TriangleMesh* mesh, const glm::vec4& color, cons
 
 void TriangleMeshInstance::render()
 {
+	render(this->color);
+}
+
+void TriangleMeshInstance::render(const glm::vec4& color)
+{
 	if (meshLODs != NULL) {
- 		Application::instance().getShader()->setUniform4f("color", color.r, color.g, color.b, color.a);
+		Application::instance().getShader()->setUniform4f("color", color.r, color.g, color.b, color.a);
 		Application::instance().getShader()->setUniformMatrix4f("model", transform);
 		meshLODs->at(lod)->render();
 	}
@@ -48,10 +53,7 @@ void TriangleMeshInstance::render()
 
 TriangleMesh* TriangleMeshInstance::getMesh()
 {
-	if (meshLODs != nullptr)
-		return meshLODs->at(this->lod);
-	else
-		return mesh;
+	return getMesh(this->lod);
 }
 
 TriangleMesh* TriangleMeshInstance::getMesh(int lod)
@@ -79,12 +81,17 @@ void TriangleMeshInstance::setLod(int lod)
 	this->lod = lod;
 }
 
+int TriangleMeshInstance::getLod()
+{
+	return this->lod;
+}
+
 int TriangleMeshInstance::lodCount() const
 {
 	if (meshLODs != nullptr)
 		return meshLODs->size();
 	else
-		return 0;
+		return 1;
 }
 
 

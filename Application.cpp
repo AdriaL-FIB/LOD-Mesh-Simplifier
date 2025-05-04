@@ -141,6 +141,9 @@ void Application::keyReleased(int key)
 		else
 			glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		break;
+	case GLFW_KEY_F2:
+		scene.toggleLODColoring();
+		break;
 	case GLFW_KEY_F5:
 		bFullscreen = !bFullscreen;
 		const GLFWvidmode* mode = glfwGetVideoMode(monitor);

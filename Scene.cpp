@@ -7,8 +7,11 @@
 #include "PLYReader.h"
 #include "Application.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/color_space.hpp>
 
-#define MAX_COST 1000000
+
+#define MAX_COST 80000
 
 
 Scene::Scene()
@@ -194,13 +197,28 @@ void Scene::render()
 {
 	camera.render();
  	renderRoom();
-	for (TriangleMeshInstance *object : objects)
- 		object->render();
+	for (TriangleMeshInstance* object : objects) {
+		if (lodColoring) {
+			int lodCount = object->lodCount();
+			glm::vec3 hsvColor(1.f);
+			//glm::vec3 green(0.f, 1.f, 0.f);
+			//glm::vec3 greenhsv = glm::hsvColor(green);
+			hsvColor.x = object->getLod() * 360.f / float(lodCount);
+			object->render(glm::vec4(glm::rgbColor(hsvColor), 1.f));
+		}
+		else
+			object->render();
+	}
 }
 
 VectorCamera &Scene::getCamera()
 {
 	return camera;
+}
+
+void Scene::toggleLODColoring()
+{
+	this->lodColoring = !this->lodColoring;
 }
 
 

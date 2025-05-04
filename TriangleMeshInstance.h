@@ -16,12 +16,14 @@ public:
 	void init(std::vector<TriangleMesh*>* meshLODs, const glm::vec4& color = glm::vec4(1.0f), const glm::mat4& transform = glm::mat4(1.0f));
 	void init(TriangleMesh* mesh, const glm::vec4 &color = glm::vec4(1.0f), const glm::mat4 &transform = glm::mat4(1.0f));
 	void render();
+	void render(const glm::vec4& color);
 	
 	TriangleMesh* getMesh();
 	TriangleMesh* getMesh(int lod);
 	void setMesh(TriangleMesh* mesh);
 	void setMesh(std::vector<TriangleMesh*>* meshLODs);
 	void setLod(int lod);
+	int getLod();
 
 	int lodCount() const;
 	

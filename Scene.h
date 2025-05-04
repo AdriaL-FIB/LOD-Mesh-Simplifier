@@ -33,6 +33,8 @@ public:
 
 	VectorCamera &getCamera();
 
+	void toggleLODColoring();
+
 private:
 	//void computeModelViewMatrix();
 	inline float benefit(float diagonal, float distance, int lod) const { return 1 - diagonal / (std::powf(2, lod) * distance); }
@@ -51,6 +53,8 @@ private:
 	vector<TriangleMeshInstance *> objects;
 	vector<TriangleMeshInstance *> walls;
 	float currentTime;
+
+	bool lodColoring;
 };
 
 
