@@ -11,7 +11,7 @@
 #include <glm/gtx/color_space.hpp>
 
 
-#define MAX_COST 80000
+#define MAX_COST (400000)
 
 
 Scene::Scene()
@@ -241,7 +241,7 @@ float Scene::computeBenefit(TriangleMeshInstance* object, int lod)
 
 void Scene::computeLODLevels()
 {
-	float totalCost = 0;
+	int totalCost = 0;
 	float maxCost = MAX_COST;
 
 	int N = objects.size();
@@ -280,7 +280,7 @@ void Scene::computeLODLevels()
 			TriangleMeshInstance* object = objects[i];
 			TriangleMesh* mesh = object->getMesh(nextLod);
 
-			int nextCost = mesh->getTriangles().size();
+			int nextCost = mesh->getNumberOfTriangles();
 			int deltaCost = (nextCost - currentCost);
 
 			if (totalCost + deltaCost >= maxCost) continue;
@@ -302,16 +302,16 @@ void Scene::computeLODLevels()
 		objects[best]->setLod(lods[best]);
 
 		// Update total cost
-		int newCost = objects[best]->getMesh()->getTriangles().size(); // cost of the new LOD
+		int newCost = objects[best]->getMesh()->getNumberOfTriangles(); // cost of the new LOD
 		totalCost += newCost - costs[best]; // increment of cost
 		benefits[best] = benefitOfBest; // update benefit of object with new LOD
 		costs[best] = newCost; // update cost of of object with new LOD
 	}
-	//cout << "LODS:";
-	//for (int i = 0; i < N; ++i) {
-	//	cout << " " << lods[i];
-	//}
-	//cout << " totalCost:" << totalCost << endl;
+	cout << "LODS:";
+	for (int i = 0; i < N; ++i) {
+		cout << " " << lods[i];
+	}
+	cout << " totalCost:" << totalCost << endl;
 }
 
 // Init & render the room. Both the floor and the walls are instances of the

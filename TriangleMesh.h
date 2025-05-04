@@ -51,6 +51,8 @@ public:
 	vector<glm::vec3> &getVertices();
 	const vector<int> &getTriangles() const;
 	vector<int> &getTriangles();
+
+	int getNumberOfTriangles() const;
 	
 	void sendToOpenGL();
 	void render() const;
@@ -63,6 +65,7 @@ public:
 private:
 	vector<glm::vec3> vertices;
 	vector<int> triangles;
+	int nOfTriangles;
 
 	GLuint vao;
 	GLuint vbo;

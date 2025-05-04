@@ -29,6 +29,7 @@ TriangleMesh::TriangleMesh()
 {
 	vao = -1;
 	vbo = -1;
+	nOfTriangles = 0;
 }
 
 TriangleMesh::~TriangleMesh()
@@ -47,6 +48,8 @@ void TriangleMesh::addTriangle(int v0, int v1, int v2)
 	triangles.push_back(v0);
 	triangles.push_back(v1);
 	triangles.push_back(v2);
+
+	nOfTriangles++;
 }
 
 void TriangleMesh::initVertices(const vector<float> &newVertices)
@@ -59,6 +62,7 @@ void TriangleMesh::initVertices(const vector<float> &newVertices)
 void TriangleMesh::initTriangles(const vector<int> &newTriangles)
 {
 	triangles = newTriangles;
+	nOfTriangles = triangles.size() / 3;
 }
 
 void TriangleMesh::buildCube()
@@ -107,6 +111,11 @@ const vector<int> &TriangleMesh::getTriangles() const
 vector<int> &TriangleMesh::getTriangles()
 {
 	return triangles;
+}
+
+int TriangleMesh::getNumberOfTriangles() const
+{
+	return nOfTriangles;
 }
 
 void TriangleMesh::sendToOpenGL()
@@ -358,7 +367,7 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 		}
 	}
 
-	cout << "Simplified from " << this->triangles.size() << " to " << m->getTriangles().size() << endl;
+	cout << "Simplified from " << this->nOfTriangles << " to " << m->nOfTriangles << endl;
 
 	return m;
 }
