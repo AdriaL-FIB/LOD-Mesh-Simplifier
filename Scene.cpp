@@ -11,7 +11,7 @@
 #include <glm/gtx/color_space.hpp>
 
 
-#define MAX_COST (400000)
+#define MAX_COST (2000000)
 
 
 Scene::Scene()
@@ -201,8 +201,6 @@ void Scene::render()
 		if (lodColoring) {
 			int lodCount = object->lodCount();
 			glm::vec3 hsvColor(1.f);
-			//glm::vec3 green(0.f, 1.f, 0.f);
-			//glm::vec3 greenhsv = glm::hsvColor(green);
 			hsvColor.x = object->getLod() * 360.f / float(lodCount);
 			object->render(glm::vec4(glm::rgbColor(hsvColor), 1.f));
 		}
@@ -256,7 +254,7 @@ void Scene::computeLODLevels()
 		TriangleMeshInstance* object = objects[i];
 		TriangleMesh* mesh = object->getMesh(maxLod);
 		lods[i] = maxLod;
-		costs[i] = mesh->getTriangles().size();
+		costs[i] = mesh->getNumberOfTriangles();
 		benefits[i] = computeBenefit(object, maxLod);
 		totalCost += costs[i];
 		objects[i]->setLod(maxLod);

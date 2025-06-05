@@ -58,7 +58,7 @@ public:
 	void render() const;
 	void free();
 
-	TriangleMesh* getSimplifiedMesh(int gridRes) const;
+	TriangleMesh* getSimplifiedMesh(int gridRes);
 
 	pair<glm::vec3, glm::vec3> getBoundingBox() const;
 
@@ -67,11 +67,14 @@ private:
 	vector<int> triangles;
 	int nOfTriangles;
 
+	vector<glm::vec3> normals;
+
 	GLuint vao;
 	GLuint vbo;
 	GLint posLocation, normalLocation;
 
 	glm::vec3 computeNormalTriangle(int triangleInd) const;
+	void computeAverageNormals();
 
 	glm::ivec3 getGridPos(const glm::vec3& pos, float gridSize, const glm::vec3& min) const;
 

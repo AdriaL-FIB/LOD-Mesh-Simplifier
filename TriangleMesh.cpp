@@ -30,6 +30,8 @@ TriangleMesh::TriangleMesh()
 	vao = -1;
 	vbo = -1;
 	nOfTriangles = 0;
+	normalLocation = 0;
+	posLocation = 0;
 }
 
 TriangleMesh::~TriangleMesh()
@@ -178,6 +180,26 @@ glm::vec3 TriangleMesh::computeNormalTriangle(int triangleInd) const {
 	return normal;
 }
 
+void TriangleMesh::computeAverageNormals()
+{
+	// check if normals are already computed
+	if (normals.size() == vertices.size())
+		return;
+
+	normals.resize(vertices.size());
+
+	for (int tri = 0; tri < triangles.size(); tri += 3) {
+		glm::vec3 face_normal = computeNormalTriangle(tri);
+		for (unsigned int vrtx = 0; vrtx < 3; vrtx++) {
+			normals[triangles[tri + vrtx]] += face_normal;
+		}
+	}
+
+	for (int i = 0; i < vertices.size(); ++i) {
+		normals[i] = glm::normalize(normals[i]);
+	}
+}
+
 
 void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey, CellInfo>& grid, float cellSize, const glm::vec3& min) const {
 	if (method == AVG_METHOD) {
@@ -207,11 +229,12 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 	}
 	else if (method == AVG_NORMALS_METHOD) {
 		for (int tri = 0; tri < triangles.size(); tri += 3) {
-			glm::vec3 n = computeNormalTriangle(tri);
 			for (unsigned int vrtx = 0; vrtx < 3; vrtx++) {
+
 				const glm::vec3& v = vertices[triangles[tri + vrtx]];
+				glm::vec3 average_normal = normals[triangles[tri + vrtx]];
 				glm::ivec3 gridPos = getGridPos(v, cellSize, min);
-				int normalId = (n.x < 0 ? 4 : 0) + (n.y < 0 ? 2 : 0) + (n.z < 0 ? 1 : 0);
+				int normalId = (average_normal.x < 0 ? 4 : 0) + (average_normal.y < 0 ? 2 : 0) + (average_normal.z < 0 ? 1 : 0);
 				std::vector<int> components({ gridPos.x, gridPos.y, gridPos.z, normalId });
 				GridKey k = makeKey(components);
 
@@ -239,13 +262,14 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 			glm::vec3 n = computeNormalTriangle(tri);
 			for(unsigned int vrtx=0; vrtx<3; vrtx++) {
 				const glm::vec3 &v = vertices[triangles[tri+vrtx]];
+				glm::vec3 average_normal = normals[triangles[tri + vrtx]];
 
 				// create key for map
 				glm::ivec3 gridPos = getGridPos(v, cellSize, min);
 				std::vector<int> components({ gridPos.x, gridPos.y, gridPos.z });
 
 				if (method == QEM_NORMALS_METHOD) { // Group by normals
-					int normalId = (n.x < 0 ? 4 : 0) + (n.y < 0 ? 2 : 0) + (n.z < 0 ? 1 : 0);
+					int normalId = (average_normal.x < 0 ? 4 : 0) + (average_normal.y < 0 ? 2 : 0) + (average_normal.z < 0 ? 1 : 0);
 					components.push_back(normalId);
 				}
 				GridKey k = makeKey(components); // new line
@@ -293,7 +317,7 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 			ci.Q(3, 3) = 1.f;
 			//ci.Q.row(3) = Eigen::Vector4f(0.f, 0.f, 0.f, 1.f);
 
-			Eigen::JacobiSVD<Eigen::Matrix4f, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(ci.Q);
+			Eigen::JacobiSVD<Eigen::Matrix4f, Eigen::ComputeThinU | Eigen::ComputeThinV | Eigen::NoQRPreconditioner> svd(ci.Q);
 
 			Eigen::Vector4f sValues = svd.singularValues();
 
@@ -320,7 +344,7 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 	}
 }
 
-TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
+TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes)
 {
 	pair<glm::vec3, glm::vec3> bb = getBoundingBox();
 	glm::vec3 min = bb.first;
@@ -328,10 +352,11 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 
 	float cellSize = (max.x - min.x) / gridRes;
 
+	computeAverageNormals();
 
 	std::unordered_map<GridKey, CellInfo> grid;
 
-	constexpr int method = AVG_METHOD;
+	constexpr int method = QEM_NORMALS_METHOD;
 	computeRepresentative(method, grid, cellSize, min);
 
 	TriangleMesh* m = new TriangleMesh();
@@ -351,7 +376,8 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes) const
 			glm::ivec3 gridPos = getGridPos(vertices[triangles[tri + vrtx]], cellSize, min);
 			std::vector<int> components({ gridPos.x, gridPos.y, gridPos.z });
 			if (method == QEM_NORMALS_METHOD || method == AVG_NORMALS_METHOD) {
-				int normalId = (n.x < 0 ? 4 : 0) + (n.y < 0 ? 2 : 0) + (n.z < 0 ? 1 : 0);
+				glm::vec3 average_normal = normals[triangles[tri + vrtx]];
+				int normalId = (average_normal.x < 0 ? 4 : 0) + (average_normal.y < 0 ? 2 : 0) + (average_normal.z < 0 ? 1 : 0);
 				components.push_back(normalId);
 			}
 			GridKey k = makeKey(components);
