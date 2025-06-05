@@ -6,11 +6,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/hash.hpp"
 
-#define AVG_METHOD 0
-#define QEM_METHOD 1
-#define QEM_NORMALS_METHOD 2
-#define AVG_NORMALS_METHOD 3
-
 using namespace std;
 
 
@@ -344,7 +339,7 @@ void TriangleMesh::computeRepresentative(int method, std::unordered_map<GridKey,
 	}
 }
 
-TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes)
+TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes, int method)
 {
 	pair<glm::vec3, glm::vec3> bb = getBoundingBox();
 	glm::vec3 min = bb.first;

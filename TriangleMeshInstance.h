@@ -13,7 +13,7 @@ public:
 	TriangleMeshInstance();
 	~TriangleMeshInstance();
 	
-	void init(std::vector<TriangleMesh*>* meshLODs, const glm::vec4& color = glm::vec4(1.0f), const glm::mat4& transform = glm::mat4(1.0f));
+	void init(std::vector<TriangleMesh*>* meshLODs, const glm::vec4& color = glm::vec4(1.0f), const glm::mat4& transform = glm::mat4(1.0f), int meshIndex = -1);
 	void init(TriangleMesh* mesh, const glm::vec4 &color = glm::vec4(1.0f), const glm::mat4 &transform = glm::mat4(1.0f));
 	void render();
 	void render(const glm::vec4& color);
@@ -38,6 +38,7 @@ public:
 	
 	void setColor(const glm::vec4 &color);
 	const glm::vec4 &getColor() const;
+	int getMeshIndex() const;
 	
 private:
 	TriangleMesh* mesh;
@@ -46,6 +47,7 @@ private:
 	glm::vec4 color;
 	glm::mat4 transform;
 
+	int meshIndex;
 };
 
 

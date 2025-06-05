@@ -11,6 +11,10 @@
 
 #include <Eigen/SVD>
 
+#define AVG_METHOD 0
+#define QEM_METHOD 1
+#define QEM_NORMALS_METHOD 2
+#define AVG_NORMALS_METHOD 3
 
 using namespace std;
 
@@ -58,7 +62,7 @@ public:
 	void render() const;
 	void free();
 
-	TriangleMesh* getSimplifiedMesh(int gridRes);
+	TriangleMesh* getSimplifiedMesh(int gridRes, int method);
 
 	pair<glm::vec3, glm::vec3> getBoundingBox() const;
 

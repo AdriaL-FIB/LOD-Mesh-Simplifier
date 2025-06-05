@@ -25,7 +25,7 @@ public:
 
 	void init();
 	bool loadMap(const string &filename);
-	bool loadMesh(const string &filename, const std::vector<int>& lodRes);
+	bool loadMesh(const string &filename, const std::vector<int>& lodRes, const std::vector<int>& methods);
 	void addInstance(int mesh, const glm::mat4& transform);
 	void addInstances(int mesh, const std::vector<glm::mat4>& transform);
 	void update(int deltaTime);
@@ -34,6 +34,7 @@ public:
 	VectorCamera &getCamera();
 
 	void toggleLODColoring();
+	void setMeshSimplficationMethod(int method);
 
 private:
 	//void computeModelViewMatrix();
@@ -49,12 +50,13 @@ private:
 	VectorCamera camera;
 	TriangleMesh *cube;
 	// TriangleMeshInstance *object;
-	vector<vector<TriangleMesh*>> meshes;
+	vector<vector<vector<TriangleMesh*>>> meshes; // Mesh --> SimplificationMethod --> LODs
 	vector<TriangleMeshInstance *> objects;
 	vector<TriangleMeshInstance *> walls;
 	float currentTime;
 
 	bool lodColoring;
+	int meshSimplificationMethod;
 };
 
 

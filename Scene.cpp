@@ -10,27 +10,34 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/color_space.hpp>
 
+#include <filesystem>
 
-#define MAX_COST (2000000)
+#define NUM_METHODS 4
+
+#define MAX_COST (400000)
 
 
 Scene::Scene()
 {
-	cube = NULL;
-	// mesh = NULL;
+	cube = nullptr;
+	meshSimplificationMethod = 0;
 }
 
 Scene::~Scene()
 {
-	if(cube != NULL)
+	if(cube != nullptr)
 		delete cube;
-	for (std::vector<TriangleMesh*> meshLods : meshes)
-		for (TriangleMesh* mesh : meshLods)
-			delete mesh;
+	for (std::vector<std::vector<TriangleMesh*>> meshMethodsLods : meshes)
+		for (std::vector<TriangleMesh*> meshLods : meshMethodsLods)
+			for (TriangleMesh* mesh : meshLods)
+				if (mesh != nullptr)
+					delete mesh;
 	for (TriangleMeshInstance *object : objects)
-		delete object;
+		if (object != nullptr)
+			delete object;
 	for(vector<TriangleMeshInstance *>::iterator it=walls.begin(); it!=walls.end(); it++)
-		delete *it;
+		if (*it != nullptr)
+			delete *it;
 }
 
 
@@ -95,6 +102,8 @@ bool Scene::loadMap(const string &filename)
 	// read empty line
 	std::getline(fin, line);
 
+	std::filesystem::create_directories("../models/LODs");
+
 	for (int i = 0; i < num_models; ++i) {
 		std::getline(fin, line);
 		std::stringstream ss(line);
@@ -104,7 +113,7 @@ bool Scene::loadMap(const string &filename)
 		while (ss >> gridRes) {
 			lodRes.push_back(gridRes);
 		}
-		loadMesh(model_filename, lodRes);
+		loadMesh(model_filename, lodRes, {0,1,2,3});
 	}
 	std::cout << "Loaded " << num_models << " models." << std::endl;
 
@@ -132,7 +141,7 @@ bool Scene::loadMap(const string &filename)
 
 // Loads the mesh into CPU memory and sends it to GPU memory (using GL)
 
-bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes)
+bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes, const std::vector<int>& methods)
 {
 #pragma warning( push )
 #pragma warning( disable : 4101)
@@ -141,31 +150,29 @@ bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes)
 
 
 	std::cout << "load mesh f" << std::endl;
-	// if(mesh != NULL)
-	// {
-	// 	mesh->free();
-	// 	delete mesh;
-	// }
 	TriangleMesh *mesh = new TriangleMesh();
 	bool bSuccess = reader.readMesh(filename, *mesh);
 	if(bSuccess)
 	{
 		mesh->sendToOpenGL();
-		std::vector<TriangleMesh*> meshLods(lodRes.size() + 1);
-		meshLods[0] = mesh;
-		for (int i = 0; i < lodRes.size(); ++i) {
-			TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(lodRes[i]);
-			simplifiedMesh->sendToOpenGL();
-			meshLods[i+1] = simplifiedMesh;
-		}
-		//mesh->sendToOpenGL();
-		//meshes.push_back(mesh);
 
-		//TriangleMeshInstance* object = new TriangleMeshInstance();
-		//object->init(mesh, glm::vec4(1.0f), glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+		std::vector<std::vector<TriangleMesh*>> meshMethodsLods(NUM_METHODS);
+
+		for (int method : methods) {
+			assert((method < NUM_METHODS), "Number of subdivision method geater than the total number of methods");
+			std::vector<TriangleMesh*>& meshLods = meshMethodsLods.at(method);
+			meshLods.resize(lodRes.size() + 1);
+			meshLods[0] = mesh;
+			for (int i = 0; i < lodRes.size(); ++i) { // modelname_res_method.ply
+				TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(lodRes[i], method);
+				simplifiedMesh->sendToOpenGL();
+				meshLods[i+1] = simplifiedMesh;
+			}
+		}
+
 
 		// Push all LODs of the mesh
-		meshes.push_back(meshLods);
+		meshes.push_back(meshMethodsLods);
 	}
 	
 	return bSuccess;
@@ -174,7 +181,7 @@ bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes)
 void Scene::addInstance(int mesh, const glm::mat4 &transform)
 {
 	TriangleMeshInstance* object = new TriangleMeshInstance();
-	object->init(&meshes[mesh], glm::vec4(1.0f), transform);
+	object->init(&meshes[mesh][meshSimplificationMethod], glm::vec4(1.0f), transform);
 	objects.push_back(object);
 }
 
@@ -216,7 +223,16 @@ VectorCamera &Scene::getCamera()
 
 void Scene::toggleLODColoring()
 {
-	this->lodColoring = !this->lodColoring;
+	lodColoring = !lodColoring;
+}
+
+void Scene::setMeshSimplficationMethod(int method)
+{
+	meshSimplificationMethod = method;
+	for (TriangleMeshInstance* object : objects) {
+		int meshIndex = object->getMeshIndex();
+		object->setMesh(&meshes[meshIndex][method]);
+	}
 }
 
 
