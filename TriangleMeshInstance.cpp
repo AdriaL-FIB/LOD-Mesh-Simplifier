@@ -16,7 +16,7 @@ TriangleMeshInstance::~TriangleMeshInstance()
 }
 
 
-void TriangleMeshInstance::init(std::vector<TriangleMesh*>* meshLODs, const glm::vec4 &color, const glm::mat4 &transform, int meshIndex = -1)
+void TriangleMeshInstance::init(std::vector<TriangleMesh*>* meshLODs, const glm::vec4 &color, const glm::mat4 &transform, int meshIndex)
 {
 	this->mesh = nullptr;
 	this->meshLODs = meshLODs;
