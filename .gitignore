@@ -14,21 +14,19 @@ windows/*
 !windows/SRGGE_BaseCode
 
 windows/SRGGE_BaseCode/*
-
 !windows/SRGGE_BaseCode/SRGGE_BaseCode
+!windows/SRGGE_BaseCode/SRGGE_BaseCode.sln
+!windows/SRGGE_BaseCode/SRGGE_BaseCode/SRGGE_BaseCode.vcxproj
+!windows/SRGGE_BaseCode/SRGGE_BaseCode/SRGGE_BaseCode.vcxproj.filter
 
-
-
-!windows/SRGGE_BaseCode/SRGGE_BaseCode
+!windows/libs
+windows/libs/*
 !windows/libs/eigen
 !windows/libs/freeglut
 !windows/libs/glew-1.13.0
 !windows/libs/glfw-3.4
 !windows/libs/glm
 
-!windows/SRGGE_BaseCode/SRGGE_BaseCode.sln
-!windows/SRGGE_BaseCode/SRGGE_BaseCode/SRGGE_BaseCode.vcxproj
-!windows/SRGGE_BaseCode/SRGGE_BaseCode/SRGGE_BaseCode.vcxproj.filter
 
 
 
