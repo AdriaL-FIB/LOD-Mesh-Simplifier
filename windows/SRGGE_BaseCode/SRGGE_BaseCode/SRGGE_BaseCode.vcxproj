@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2A1F2077-F9B0-4454-ACD0-5DA0E16FFEF2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>SRGGE_BaseCode</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\Debug_Win32</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\Debug_x64\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\Release_Win32</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)..\..\Release_x64\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\libs\glm;..\..\libs\freeglut\include;..\..\libs\glew-1.13.0\include;..\..\libs\gl3w\include;..\..\libs\glfw-3.4\include;..\..\libs\eigen</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\libs\freeglut\lib;..\..\libs\glew-1.13.0\lib\Release\Win32;..\..\libs\glfw-3.4\lib-vc2022</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freeglut.lib;glew32.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(SolutionDir)..\..\map.txt" "$(TargetDir)..\" /Y
+XCOPY "$(SolutionDir)..\..\shaders" "$(TargetDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\libs\freeglut\bin\freeglut.dll" "$(TargetDir)" /Y
+XCOPY "$(SolutionDir)..\libs\glew-1.13.0\bin\Release\Win32\glew32.dll" "$(TargetDir)" /Y
+XCOPY "$(SolutionDir)..\libs\glfw-3.4\lib-vc2022\glfw3.dll" "$(TargetDir)" /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\libs\glm;..\..\libs\freeglut\include;..\..\libs\glew-1.13.0\include;..\..\libs\gl3w\include;..\..\libs\glfw-3.4\include;..\..\libs\eigen</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\libs\freeglut\lib\x64;..\..\libs\glew-1.13.0\lib\Release\x64;..\..\libs\glfw-3.4\lib-vc2022-64</AdditionalLibraryDirectories>
+      <AdditionalDependencies>freeglut.lib;glew32.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(SolutionDir)..\..\map.txt" "$(TargetDir)..\" /Y
+XCOPY "$(SolutionDir)..\..\shaders" "$(TargetDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\libs\freeglut\bin\x64\freeglut.dll" "$(TargetDir)" /Y
+XCOPY "$(SolutionDir)..\libs\glew-1.13.0\bin\Release\x64\glew32.dll" "$(TargetDir)" /Y
+XCOPY "$(SolutionDir)..\libs\glfw-3.4\lib-vc2022-64\glfw3.dll" "$(TargetDir)" /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\libs\glm;..\..\libs\freeglut\include;..\..\libs\glew-1.13.0\include;..\..\libs\gl3w\include;..\..\libs\glfw-3.4\include;..\..\libs\eigen</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>freeglut.lib;glew32.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\libs\freeglut\lib;..\..\libs\glew-1.13.0\lib\Release\Win32;..\..\libs\glfw-3.4\lib-vc2022</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(SolutionDir)..\..\map.txt" "$(TargetDir)..\" /Y
+XCOPY "$(SolutionDir)..\..\shaders" "$(TargetDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\libs\freeglut\bin\freeglut.dll" "$(TargetDir)" /Y
+XCOPY "$(SolutionDir)..\libs\glew-1.13.0\bin\Release\Win32\glew32.dll" "$(TargetDir)" /Y
+XCOPY "$(SolutionDir)..\libs\glfw-3.4\lib-vc2022\glfw3.dll" "$(TargetDir)" /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\libs\glm;..\..\libs\freeglut\include;..\..\libs\glew-1.13.0\include;..\..\libs\gl3w\include;..\..\libs\glfw-3.4\include;..\..\libs\eigen</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>freeglut.lib;glew32.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\libs\freeglut\lib\x64;..\..\libs\glew-1.13.0\lib\Release\x64;..\..\libs\glfw-3.4\lib-vc2022-64</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(SolutionDir)..\..\map.txt" "$(TargetDir)..\" /Y
+XCOPY "$(SolutionDir)..\..\shaders" "$(TargetDir)shaders\" /S /Y
+XCOPY "$(SolutionDir)..\libs\freeglut\bin\x64\freeglut.dll" "$(TargetDir)" /Y
+XCOPY "$(SolutionDir)..\libs\glew-1.13.0\bin\Release\x64\glew32.dll" "$(TargetDir)" /Y
+XCOPY "$(SolutionDir)..\libs\glfw-3.4\lib-vc2022-64\glfw3.dll" "$(TargetDir)" /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\Application.h" />
+    <ClInclude Include="..\..\..\PLYReader.h" />
+    <ClInclude Include="..\..\..\Scene.h" />
+    <ClInclude Include="..\..\..\Shader.h" />
+    <ClInclude Include="..\..\..\ShaderProgram.h" />
+    <ClInclude Include="..\..\..\TriangleMesh.h" />
+    <ClInclude Include="..\..\..\TriangleMeshInstance.h" />
+    <ClInclude Include="..\..\..\VectorCamera.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Application.cpp" />
+    <ClCompile Include="..\..\..\main.cpp" />
+    <ClCompile Include="..\..\..\PLYReader.cpp" />
+    <ClCompile Include="..\..\..\Scene.cpp" />
+    <ClCompile Include="..\..\..\Shader.cpp" />
+    <ClCompile Include="..\..\..\ShaderProgram.cpp" />
+    <ClCompile Include="..\..\..\TriangleMesh.cpp" />
+    <ClCompile Include="..\..\..\TriangleMeshInstance.cpp" />
+    <ClCompile Include="..\..\..\VectorCamera.cpp" />
+    <ClCompile Include="..\..\libs\gl3w\src\gl3w.c">
+      <DeploymentContent>false</DeploymentContent>
+    </ClCompile>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -27,11 +27,11 @@ Scene::~Scene()
 {
 	if(cube != nullptr)
 		delete cube;
-	for (std::vector<std::vector<TriangleMesh*>> meshMethodsLods : meshes)
-		for (std::vector<TriangleMesh*> meshLods : meshMethodsLods)
-			for (TriangleMesh* mesh : meshLods)
-				if (mesh != nullptr)
-					delete mesh;
+	//for (std::vector<std::vector<TriangleMesh*>> meshMethodsLods : meshes)
+	//	for (std::vector<TriangleMesh*> meshLods : meshMethodsLods)
+	//		for (TriangleMesh* mesh : meshLods)
+	//			if (mesh != nullptr)
+	//				delete mesh;
 	for (TriangleMeshInstance *object : objects)
 		if (object != nullptr)
 			delete object;
@@ -113,7 +113,7 @@ bool Scene::loadMap(const string &filename)
 		while (ss >> gridRes) {
 			lodRes.push_back(gridRes);
 		}
-		loadMesh(model_filename, lodRes, {0,1,2,3});
+		loadMesh(model_filename, lodRes, {0});
 	}
 	std::cout << "Loaded " << num_models << " models." << std::endl;
 
@@ -150,21 +150,21 @@ bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes, con
 
 
 	std::cout << "load mesh f" << std::endl;
-	TriangleMesh *mesh = new TriangleMesh();
+	std::shared_ptr<TriangleMesh> mesh = std::make_shared<TriangleMesh>();
 	bool bSuccess = reader.readMesh(filename, *mesh);
 	if(bSuccess)
 	{
 		mesh->sendToOpenGL();
 
-		std::vector<std::vector<TriangleMesh*>> meshMethodsLods(NUM_METHODS);
+		std::vector<std::vector<std::shared_ptr<TriangleMesh>>> meshMethodsLods(NUM_METHODS);
 
 		for (int method : methods) {
 			assert((method < NUM_METHODS), "Number of subdivision method geater than the total number of methods");
-			std::vector<TriangleMesh*>& meshLods = meshMethodsLods.at(method);
+			std::vector<std::shared_ptr<TriangleMesh>>& meshLods = meshMethodsLods.at(method);
 			meshLods.resize(lodRes.size() + 1);
 			meshLods[0] = mesh;
 			for (int i = 0; i < lodRes.size(); ++i) { // modelname_res_method.ply
-				TriangleMesh* simplifiedMesh = mesh->getSimplifiedMesh(lodRes[i], method);
+				std::shared_ptr<TriangleMesh> simplifiedMesh(mesh->getSimplifiedMesh(lodRes[i], method));
 				simplifiedMesh->sendToOpenGL();
 				meshLods[i+1] = simplifiedMesh;
 			}

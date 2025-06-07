@@ -16,7 +16,7 @@ TriangleMeshInstance::~TriangleMeshInstance()
 }
 
 
-void TriangleMeshInstance::init(std::vector<TriangleMesh*>* meshLODs, const glm::vec4 &color, const glm::mat4 &transform, int meshIndex)
+void TriangleMeshInstance::init(std::vector<std::shared_ptr<TriangleMesh>>* meshLODs, const glm::vec4 &color, const glm::mat4 &transform, int meshIndex)
 {
 	this->mesh = nullptr;
 	this->meshLODs = meshLODs;
@@ -61,7 +61,7 @@ TriangleMesh* TriangleMeshInstance::getMesh()
 TriangleMesh* TriangleMeshInstance::getMesh(int lod)
 {
 	if (meshLODs != nullptr)
-		return meshLODs->at(lod);
+		return meshLODs->at(lod).get();
 	else
 		return mesh;
 }
@@ -72,7 +72,7 @@ void TriangleMeshInstance::setMesh(TriangleMesh* mesh)
 	this->mesh = mesh;
 }
 
-void TriangleMeshInstance::setMesh(std::vector<TriangleMesh*>* meshLODs)
+void TriangleMeshInstance::setMesh(std::vector<std::shared_ptr<TriangleMesh>>* meshLODs)
 {
 	this->mesh = nullptr;
 	this->meshLODs = meshLODs;

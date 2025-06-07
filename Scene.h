@@ -50,7 +50,7 @@ private:
 	VectorCamera camera;
 	TriangleMesh *cube;
 	// TriangleMeshInstance *object;
-	vector<vector<vector<TriangleMesh*>>> meshes; // Mesh --> SimplificationMethod --> LODs
+	vector<vector<vector<std::shared_ptr<TriangleMesh>>>> meshes; // Mesh --> SimplificationMethod --> LODs
 	vector<TriangleMeshInstance *> objects;
 	vector<TriangleMeshInstance *> walls;
 	float currentTime;
