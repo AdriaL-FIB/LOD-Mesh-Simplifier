@@ -6,6 +6,9 @@ models/*
 eigen/*
 !eigen/Eigen
 
+visibility.txt
+models/LODs
+
 Debug*
 Release*
 

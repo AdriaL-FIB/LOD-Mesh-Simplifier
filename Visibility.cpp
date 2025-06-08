@@ -3,6 +3,8 @@
 #include <glm/gtc/constants.hpp>
 #include <random>
 #include <cmath>
+#include <iostream>
+#include <fstream>
 
 
 std::vector<glm::ivec2> Visibility::bresenhamSupercover(glm::vec2 o, glm::vec2 dir, int rows, int cols)
@@ -77,6 +79,8 @@ std::vector<std::set<int>> Visibility::computeVisibility(const std::vector<std::
 
 	std::vector<std::set<int>> cellsVisibility(rows * cols);
 
+	std::cout << "Computing Visibility with " << maxRays << " rays." << std::endl;
+
 	for (size_t i = 0; i < maxRays; ++i) {
 		glm::vec2 randOrigin = randomVec2InBounds(cols, rows);
 		glm::vec2 randDir = randomUnitVector2D();
@@ -102,3 +106,28 @@ std::vector<std::set<int>> Visibility::computeVisibility(const std::vector<std::
 
 	return cellsVisibility;
 }
+
+void Visibility::saveVisibilityFile(const std::vector<std::set<int>>& vis, const std::string& outfile, int nx, int ny)
+{
+	std::ofstream fout;
+
+	fout.open(outfile);
+	if (!fout.is_open()) {
+		std::cerr << "File" << outfile << " could not be opened." << std::endl;
+		return;
+	}
+
+	fout << nx << " " << ny << std::endl;
+
+	for (int i = 0; i < vis.size(); ++i) {
+		if (vis[i].size() > 0) {
+			fout << i;
+			for (int j : vis[i]) {
+				fout << " " << j;
+			}
+			fout << std::endl;
+		}
+	}
+	fout.close();
+}
+

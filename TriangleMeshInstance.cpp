@@ -9,6 +9,7 @@ TriangleMeshInstance::TriangleMeshInstance()
 	mesh = NULL;
 	lod = 0;
 	meshIndex = -1;
+	bbHasToBeComputed = true;
 }
 
 TriangleMeshInstance::~TriangleMeshInstance()
@@ -53,12 +54,12 @@ void TriangleMeshInstance::render(const glm::vec4& color)
 	}
 }
 
-TriangleMesh* TriangleMeshInstance::getMesh()
+TriangleMesh* TriangleMeshInstance::getMesh() const
 {
 	return getMesh(this->lod);
 }
 
-TriangleMesh* TriangleMeshInstance::getMesh(int lod)
+TriangleMesh* TriangleMeshInstance::getMesh(int lod) const
 {
 	if (meshLODs != nullptr)
 		return meshLODs->at(lod).get();
@@ -83,7 +84,7 @@ void TriangleMeshInstance::setLod(int lod)
 	this->lod = lod;
 }
 
-int TriangleMeshInstance::getLod()
+int TriangleMeshInstance::getLod() const
 {
 	return this->lod;
 }
@@ -100,6 +101,7 @@ int TriangleMeshInstance::lodCount() const
 void TriangleMeshInstance::setTransform(const glm::mat4 &transform)
 {
 	this->transform = transform;
+	bbHasToBeComputed = true;
 }
 
 const glm::mat4 &TriangleMeshInstance::getTransform() const
@@ -110,26 +112,31 @@ const glm::mat4 &TriangleMeshInstance::getTransform() const
 void TriangleMeshInstance::addTransform(const glm::mat4 &addedTransform)
 {
 	transform = addedTransform * transform;
+	bbHasToBeComputed = true;
 }
 
 void TriangleMeshInstance::resetTransform()
 {
 	transform = glm::mat4(1.0f);
+	bbHasToBeComputed = true;
 }
 
 void TriangleMeshInstance::translate(const glm::vec3 &move)
 {
 	transform = glm::translate(glm::mat4(1.0f), move) * transform;
+	bbHasToBeComputed = true;
 }
 
 void TriangleMeshInstance::rotate(const glm::vec3 &axis, float angleDegrees)
 {
 	transform = glm::rotate(glm::mat4(1.0f), angleDegrees * 3.14159f / 180.f, axis) * transform;
+	bbHasToBeComputed = true;
 }
 
 void TriangleMeshInstance::scale(const glm::vec3 &factor)
 {
 	transform = glm::scale(glm::mat4(1.0f), factor) * transform;
+	bbHasToBeComputed = true;
 }
 
 void TriangleMeshInstance::setColor(const glm::vec4 &color)
@@ -145,6 +152,18 @@ const glm::vec4 &TriangleMeshInstance::getColor() const
 int TriangleMeshInstance::getMeshIndex() const
 {
 	return meshIndex;
+}
+
+pair<glm::vec3, glm::vec3> TriangleMeshInstance::getBoundingBox() const
+{
+	pair<glm::vec3, glm::vec3> bb = getMesh()->getBoundingBox();
+
+	if (bbHasToBeComputed) {
+		this->bb = { transform * glm::vec4(bb.first, 1.f) , transform * glm::vec4(bb.second, 1.f) };
+		bbHasToBeComputed = false;
+	}
+	
+	return this->bb;
 }
 
 

@@ -18,12 +18,12 @@ public:
 	void render();
 	void render(const glm::vec4& color);
 	
-	TriangleMesh* getMesh();
-	TriangleMesh* getMesh(int lod);
+	TriangleMesh* getMesh() const;
+	TriangleMesh* getMesh(int lod) const;
 	void setMesh(TriangleMesh* mesh);
 	void setMesh(std::vector<std::shared_ptr<TriangleMesh>>* meshLODs);
 	void setLod(int lod);
-	int getLod();
+	int getLod() const;
 
 	int lodCount() const;
 	
@@ -39,6 +39,8 @@ public:
 	void setColor(const glm::vec4 &color);
 	const glm::vec4 &getColor() const;
 	int getMeshIndex() const;
+
+	pair<glm::vec3, glm::vec3> getBoundingBox() const;
 	
 private:
 	TriangleMesh* mesh;
@@ -48,6 +50,9 @@ private:
 	glm::mat4 transform;
 
 	int meshIndex;
+
+	mutable pair<glm::vec3, glm::vec3> bb;
+	mutable bool bbHasToBeComputed;
 };
 
 

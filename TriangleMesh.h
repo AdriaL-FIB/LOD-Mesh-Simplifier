@@ -77,6 +77,10 @@ private:
 	GLuint vbo;
 	GLint posLocation, normalLocation;
 
+	mutable pair<glm::vec3, glm::vec3> bb;
+	mutable bool bbHasToBeComputed;
+
+private:
 	glm::vec3 computeNormalTriangle(int triangleInd) const;
 	void computeAverageNormals();
 

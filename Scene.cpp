@@ -6,6 +6,7 @@
 #include "Scene.h"
 #include "PLYReader.h"
 #include "Application.h"
+#include "Visibility.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/color_space.hpp>
@@ -205,6 +206,9 @@ void Scene::render()
 	camera.render();
  	renderRoom();
 	for (TriangleMeshInstance* object : objects) {
+
+		//std::pair<glm::vec3, glm::vec3> bb = object->getBoundingBox();
+
 		if (lodColoring) {
 			int lodCount = object->lodCount();
 			glm::vec3 hsvColor(1.f);
@@ -336,10 +340,13 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 	glm::mat4 transform;
 	TriangleMeshInstance *instance;
 
-	int ny = map.size(); // rows
+	int nz = map.size(); // rows
 	int nx = map[0].size(); // columns
 
-	for (int i = 0; i < ny; ++i) {
+	mapSizeX = nx;
+	mapSizeZ = nz;
+
+	for (int i = 0; i < nz; ++i) {
 		for (int j = 0; j < nx; ++j) {
 
 			transform = glm::mat4(1.0f);
@@ -347,12 +354,12 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 			switch (map[i][j])
 			{
 			case 0: // Floor
-				transform = glm::translate(transform, glm::vec3(i - ny/2, -0.5f, j - nx/2));
+				transform = glm::translate(transform, glm::vec3(i - nz/2, -0.5f, j - nx/2));
 				transform = glm::scale(transform, glm::vec3(1.f, 1.f, 1.f));
 				break;
 			
 			case 1: // Wall
-				transform = glm::translate(transform, glm::vec3(i - ny/2, 1.f, j - nx/2));
+				transform = glm::translate(transform, glm::vec3(i - nz/2, 1.f, j - nx/2));
 				transform = glm::scale(transform, glm::vec3(1.f, 2.f, 1.f));
 				break;
 			default:
@@ -365,6 +372,50 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 
 			// cout << "loaded with x:" << i - ny/2 << " z: " << j - nx/2 << endl;
 		}
+	}
+
+	// Visibility
+	const std::string visibilityPath = "../visibility.txt";
+
+	bool recomputeVis = true;
+
+	if (std::filesystem::exists(visibilityPath)) {
+		ifstream fin;
+
+		fin.open(visibilityPath);
+		if (!fin.is_open())
+			return;
+
+		int vnx, vny;
+		fin >> vnx >> vny;
+
+
+		std::string line;
+		// read empty line
+		std::getline(fin, line);
+
+
+		if (vnx == nx && vny == nz) {
+			std::cout << "Reading visibility file..." << std::endl;
+
+			recomputeVis = false;
+			cellsVisibility.resize(nx * nz);
+			// read file
+			int cell_i, cell_j; // Cell i sees cell j
+			while (std::getline(fin, line)) {
+				std::stringstream ss(line);
+				ss >> cell_i;
+				while (ss >> cell_j) {
+					cellsVisibility[cell_i].insert(cell_j);
+				}
+			}
+			std::cout << "Done." << std::endl;
+		}
+	}
+
+	if (recomputeVis) {
+		cellsVisibility = Visibility::computeVisibility(map, 101101);
+		Visibility::saveVisibilityFile(cellsVisibility, visibilityPath, nx, nz);
 	}
 }
 

@@ -27,6 +27,7 @@ TriangleMesh::TriangleMesh()
 	nOfTriangles = 0;
 	normalLocation = 0;
 	posLocation = 0;
+	bbHasToBeComputed = true;
 }
 
 TriangleMesh::~TriangleMesh()
@@ -394,26 +395,30 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes, int method)
 
 pair<glm::vec3, glm::vec3> TriangleMesh::getBoundingBox() const
 {
-	glm::vec3 min, max;
-	min = max = vertices[0];
+	if (bbHasToBeComputed) {
+		glm::vec3 min, max;
+		min = max = vertices[0];
 
-	for (int i = 1; i < vertices.size(); ++i) {
-		if (min.x > vertices[i].x)
-			min.x = vertices[i].x;
-		if (min.y > vertices[i].y)
-			min.y = vertices[i].y;
-		if (min.z > vertices[i].z)
-			min.z = vertices[i].z;
+		for (int i = 1; i < vertices.size(); ++i) {
+			if (min.x > vertices[i].x)
+				min.x = vertices[i].x;
+			if (min.y > vertices[i].y)
+				min.y = vertices[i].y;
+			if (min.z > vertices[i].z)
+				min.z = vertices[i].z;
 
-		if (max.x < vertices[i].x)
-			max.x = vertices[i].x;
-		if (max.y < vertices[i].y)
-			max.y = vertices[i].y;
-		if (max.z < vertices[i].z)
-			max.z = vertices[i].z;
+			if (max.x < vertices[i].x)
+				max.x = vertices[i].x;
+			if (max.y < vertices[i].y)
+				max.y = vertices[i].y;
+			if (max.z < vertices[i].z)
+				max.z = vertices[i].z;
+		}
+		this->bb = { min, max };
+		bbHasToBeComputed = false;
 	}
 
-	return {min, max};
+	return this->bb;
 }
 
 glm::ivec3 TriangleMesh::getGridPos(const glm::vec3& pos, float cellSize, const glm::vec3& min) const

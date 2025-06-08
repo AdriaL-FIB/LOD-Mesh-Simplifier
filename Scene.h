@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <set>
 #include "VectorCamera.h"
 #include "TriangleMesh.h"
 #include "TriangleMeshInstance.h"
@@ -49,7 +50,6 @@ private:
 private:
 	VectorCamera camera;
 	TriangleMesh *cube;
-	// TriangleMeshInstance *object;
 	vector<vector<vector<std::shared_ptr<TriangleMesh>>>> meshes; // Mesh --> SimplificationMethod --> LODs
 	vector<TriangleMeshInstance *> objects;
 	vector<TriangleMeshInstance *> walls;
@@ -57,6 +57,10 @@ private:
 
 	bool lodColoring;
 	int meshSimplificationMethod;
+
+	std::vector<std::set<int>> cellsVisibility;
+
+	int mapSizeX, mapSizeZ;
 };
 
 
