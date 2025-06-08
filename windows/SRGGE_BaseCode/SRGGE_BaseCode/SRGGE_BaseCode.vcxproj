@@ -198,6 +198,7 @@ XCOPY "$(SolutionDir)..\libs\glfw-3.4\lib-vc2022-64\glfw3.dll" "$(TargetDir)" /Y
     <ClInclude Include="..\..\..\TriangleMesh.h" />
     <ClInclude Include="..\..\..\TriangleMeshInstance.h" />
     <ClInclude Include="..\..\..\VectorCamera.h" />
+    <ClInclude Include="..\..\..\Visibility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Application.cpp" />
@@ -212,6 +213,7 @@ XCOPY "$(SolutionDir)..\libs\glfw-3.4\lib-vc2022-64\glfw3.dll" "$(TargetDir)" /Y
     <ClCompile Include="..\..\libs\gl3w\src\gl3w.c">
       <DeploymentContent>false</DeploymentContent>
     </ClCompile>
+    <ClCompile Include="..\..\..\Visibility.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

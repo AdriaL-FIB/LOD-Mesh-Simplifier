@@ -336,8 +336,8 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 	glm::mat4 transform;
 	TriangleMeshInstance *instance;
 
-	int ny = map.size();
-	int nx = map[0].size();
+	int ny = map.size(); // rows
+	int nx = map[0].size(); // columns
 
 	for (int i = 0; i < ny; ++i) {
 		for (int j = 0; j < nx; ++j) {
