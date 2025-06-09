@@ -362,7 +362,10 @@ void Scene::computeLODLevels()
 
 void Scene::computeObjectVisibility()
 {
-	glm::ivec2 cameraGridCell(floor(getCamera().getPosition().x + mapSize.x / 2.f), floor(getCamera().getPosition().z + mapSize.y / 2.f));
+	glm::ivec2 cameraGridCell(floor(getCamera().getPosition().x + mapSize.x / 2 + 0.5f), floor(getCamera().getPosition().z + mapSize.y / 2 + 0.5f));
+
+	std::cout << "Camera grid cell: (" << cameraGridCell.x << ", " << cameraGridCell.y << "), camPos: (" << getCamera().getPosition().x << "," << getCamera().getPosition().z << ")" << std::endl;
+
 	for (int i = 0; i < objects.size(); ++i) {
 		TriangleMeshInstance* object = objects[i];
 
@@ -474,7 +477,7 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 	}
 
 	if (recomputeVis) {
-		cellsVisibility = Visibility::computeVisibility(map, 1000000);
+		cellsVisibility = Visibility::computeVisibility(map, 100000);
 		Visibility::saveVisibilityFile(cellsVisibility, visibilityPath, nx, nz);
 	}
 }
