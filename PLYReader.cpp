@@ -8,7 +8,7 @@
 // and finally the face data. Then it rescales the model so that it fits a
 // box of size 1x1x1 centered at the origin
 
-bool PLYReader::readMesh(const string &filename, TriangleMesh &mesh)
+bool PLYReader::readMesh(const string& filename, TriangleMesh& mesh)
 {
 	ifstream fin;
 	int nVertices, nFaces;
@@ -32,6 +32,47 @@ bool PLYReader::readMesh(const string &filename, TriangleMesh &mesh)
 	rescaleModel(plyVertices);
 	addModelToMesh(plyVertices, plyTriangles, mesh);
 
+	return true;
+}
+
+bool PLYReader::writeMesh(const string& filename, const TriangleMesh& mesh)
+{
+	ofstream fout;
+	fout.open(filename, ios_base::binary);
+	if (!fout.is_open())
+		return false;
+
+	int nVertices = mesh.getVertices().size();
+	int nFaces = mesh.getNumberOfTriangles();
+
+	// Header
+	fout << "ply\n";
+	fout << "format binary_little_endian 1.0\n";
+	fout << "comment generado por writeMesh()\n";
+	fout << "element vertex " << nVertices << "\n";
+	fout << "property float x\n";
+	fout << "property float y\n";
+	fout << "property float z\n";
+	fout << "element face " << nFaces << "\n";
+	fout << "property list uchar int vertex_indices\n";
+	fout << "end_header\n";
+
+	for (const glm::vec3& v : mesh.getVertices()) {
+		fout.write(reinterpret_cast<const char*>(&v.x), sizeof(float));
+		fout.write(reinterpret_cast<const char*>(&v.y), sizeof(float));
+		fout.write(reinterpret_cast<const char*>(&v.z), sizeof(float));
+	}
+
+	const vector<int> triangles = mesh.getTriangles();
+	for (unsigned int i = 0; i < triangles.size(); i+=3) {
+		unsigned char n = 3;
+		fout.write(reinterpret_cast<const char*>(&n), sizeof(unsigned char));
+		fout.write(reinterpret_cast<const char*>(&triangles[i]), sizeof(int));
+		fout.write(reinterpret_cast<const char*>(&triangles[i+1]), sizeof(int));
+		fout.write(reinterpret_cast<const char*>(&triangles[i+2]), sizeof(int));
+	}
+
+	fout.close();
 	return true;
 }
 
@@ -95,7 +136,7 @@ void PLYReader::loadFaces(ifstream &fin, int nFaces, vector<int> &plyTriangles)
 	int i, tri[3];
 	unsigned char nVrtxPerFace;
 
-	plyTriangles.reserve(nFaces);
+	plyTriangles.reserve(nFaces * 3);
 	for(i=0; i<nFaces; i++)
 	{
 		fin.read((char *)&nVrtxPerFace, sizeof(unsigned char));
