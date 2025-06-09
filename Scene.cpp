@@ -131,6 +131,7 @@ bool Scene::loadMap(const string &filename)
 	}
 	std::cout << "Loaded " << num_instances << " instances." << std::endl;
 	lodTimers.resize(num_instances, 0);
+	objectVisibility.resize(num_instances, true);
 
 
 	
@@ -194,6 +195,7 @@ void Scene::addInstances(int mesh, const std::vector<glm::mat4> &transform)
 void Scene::update(int deltaTime)
 {
 	currentTime += deltaTime;
+	computeObjectVisibility();
 	computeLODLevels();
 }
 
@@ -204,37 +206,10 @@ void Scene::render()
 	camera.render();
  	renderRoom();
 
-	glm::ivec2 cameraGridCell(floor(getCamera().getPosition().x + mapSize.x/2.f), floor(getCamera().getPosition().z + mapSize.y/2.f));
-	for (TriangleMeshInstance* object : objects) {
+	for (int i = 0; i < objects.size(); ++i) {
+		TriangleMeshInstance* object = objects[i];
 
-		std::pair<glm::vec3, glm::vec3> bb = object->getBoundingBox();
-		glm::vec3 minPoint = bb.first;
-		glm::vec3 maxPoint = bb.second;
-
-		int minGridX = floor(minPoint.x + mapSize.x/2.f);
-		int minGridZ = floor(minPoint.z + mapSize.y/2.f);
-		int maxGridX = floor(maxPoint.x + mapSize.x/2.f);
-		int maxGridZ = floor(maxPoint.z + mapSize.y/2.f);
-
-		bool isVisible = false;
-		int cameraCellIndex = cameraGridCell.y * mapSize.x + cameraGridCell.x;
-
-		if (cameraCellIndex >= cellsVisibility.size()) {
-			isVisible = true;
-		}
-		else {
-			std::set<int>&visibleCells = cellsVisibility[cameraCellIndex];
-			for (int gridX = (std::max)(minGridX, 0); gridX <= (std::min)(maxGridX, mapSize.x) && !isVisible; ++gridX) {
-				for (int gridZ = (std::max)(minGridZ, 0); gridZ <= (std::min)(maxGridZ, mapSize.y) && !isVisible; ++gridZ) {
-					int cellIndex = gridZ * mapSize.x + gridX;
-					if (visibleCells.count(cellIndex) > 0) {
-						isVisible = true;
-					}
-				}
-			}
-		}
-
-		if (isVisible) {
+		if (objectVisibility[i]) {
 			if (lodColoring) {
 				int lodCount = object->lodCount();
 				glm::vec3 hsvColor(1.f);
@@ -375,6 +350,39 @@ void Scene::computeLODLevels()
 		}
 	}
 	cout << " totalCost:" << totalCost << endl;
+}
+
+void Scene::computeObjectVisibility()
+{
+	glm::ivec2 cameraGridCell(floor(getCamera().getPosition().x + mapSize.x / 2.f), floor(getCamera().getPosition().z + mapSize.y / 2.f));
+	for (int i = 0; i < objects.size(); ++i) {
+		TriangleMeshInstance* object = objects[i];
+
+		std::pair<glm::vec3, glm::vec3> bb = object->getBoundingBox();
+		glm::vec3 minPoint = bb.first;
+		glm::vec3 maxPoint = bb.second;
+
+		int minGridX = floor(minPoint.x + mapSize.x / 2.f);
+		int minGridZ = floor(minPoint.z + mapSize.y / 2.f);
+		int maxGridX = floor(maxPoint.x + mapSize.x / 2.f);
+		int maxGridZ = floor(maxPoint.z + mapSize.y / 2.f);
+
+		int cameraCellIndex = cameraGridCell.y * mapSize.x + cameraGridCell.x;
+		if (cameraCellIndex >= cellsVisibility.size()) {
+			objectVisibility[i] = true;
+			continue;
+		}
+
+		objectVisibility[i] = false;
+		std::set<int>& visibleCells = cellsVisibility[cameraCellIndex];
+		for (int gridX = (std::max)(minGridX, 0); gridX <= (std::min)(maxGridX, mapSize.x) && !objectVisibility[i]; ++gridX)
+			for (int gridZ = (std::max)(minGridZ, 0); gridZ <= (std::min)(maxGridZ, mapSize.y) && !objectVisibility[i]; ++gridZ) {
+				int cellIndex = gridZ * mapSize.x + gridX;
+				if (visibleCells.count(cellIndex) > 0 || cameraCellIndex == cellIndex) {
+					objectVisibility[i] = true;
+				}
+			}
+	}
 }
 
 // Init & render the room. Both the floor and the walls are instances of the

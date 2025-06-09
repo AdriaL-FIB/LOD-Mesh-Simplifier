@@ -43,6 +43,7 @@ private:
 
 	float computeBenefit(TriangleMeshInstance* mesh, int lod);
 	void computeLODLevels();
+	void computeObjectVisibility();
 	
 	void initRoom(const std::vector<std::vector<char>>& mapInfo);
 	void renderRoom();
@@ -60,6 +61,7 @@ private:
 
 	std::vector<int> lodTimers;
 	std::vector<std::set<int>> cellsVisibility;
+	std::vector<bool> objectVisibility;
 
 	glm::ivec2 mapSize;
 };
