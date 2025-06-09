@@ -274,6 +274,11 @@ void Scene::computeLODLevels()
 	std::vector<int> lastLods(N);
 
 	for (int i = 0; i < N; ++i) {
+		if (!objectVisibility[i]) {
+			lodTimers[i] = 0;
+			continue;
+		}
+
 		lastLods[i] = objects[i]->getLod();
 
 		lodTimers[i] = (lodTimers[i] > 0) ? lodTimers[i] - 1 : 0;
@@ -301,6 +306,7 @@ void Scene::computeLODLevels()
 			float bestRatio = 0;
 			float benefitOfBest = 0;
 			for (int i = 0; i < N; ++i) {
+				if (!objectVisibility[i] || lodTimers[i] > 0) continue;
 				int currentLod = lods[i];
 				int nextLod = currentLod - 1;
 				if (nextLod < 0) continue;
@@ -344,8 +350,10 @@ void Scene::computeLODLevels()
 
 	cout << "LODS:";
 	for (int i = 0; i < N; ++i) {
-		cout << " " << lods[i];
-		if (lods[i] != lastLods[i]) {
+		if (!objectVisibility[i]) cout << " -";
+		else cout << " " << lods[i];
+
+		if (lods[i] != lastLods[i]) { // If LOD changed, reset timer
 			lodTimers[i] = N_FRAMES;
 		}
 	}
