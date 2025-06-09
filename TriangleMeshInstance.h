@@ -53,6 +53,9 @@ private:
 
 	mutable pair<glm::vec3, glm::vec3> bb;
 	mutable bool bbHasToBeComputed;
+	
+private:
+	std::vector<glm::vec3> getBoundingBoxCorners(const glm::vec3& min, const glm::vec3& max) const;
 };
 
 

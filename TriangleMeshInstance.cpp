@@ -156,15 +156,37 @@ int TriangleMeshInstance::getMeshIndex() const
 
 pair<glm::vec3, glm::vec3> TriangleMeshInstance::getBoundingBox() const
 {
-	pair<glm::vec3, glm::vec3> bb = getMesh()->getBoundingBox();
-
 	if (bbHasToBeComputed) {
-		this->bb = { transform * glm::vec4(bb.first, 1.f) , transform * glm::vec4(bb.second, 1.f) };
+		pair<glm::vec3, glm::vec3> bb = getMesh()->getBoundingBox();
+
+		std::vector<glm::vec3> corners = getBoundingBoxCorners(bb.first, bb.second);
+
+		glm::vec3 min, max;
+		min = max = glm::vec3(transform * glm::vec4(corners[0], 1.f));
+
+		for (int i = 1; i < corners.size(); ++i) {
+			glm::vec3 p = glm::vec3(transform * glm::vec4(corners[i], 1.f));
+			min = (glm::min)(min, p);
+			max = (glm::max)(max, p);
+		}
+
+		this->bb = { min, max };
 		bbHasToBeComputed = false;
 	}
 	
 	return this->bb;
 }
 
-
-
+std::vector<glm::vec3> TriangleMeshInstance::getBoundingBoxCorners(const glm::vec3& min, const glm::vec3& max) const
+{
+	return {
+		{min.x, min.y, min.z},
+		{min.x, min.y, max.z},
+		{min.x, max.y, min.z},
+		{min.x, max.y, max.z},
+		{max.x, min.y, min.z},
+		{max.x, min.y, max.z},
+		{max.x, max.y, min.z},
+		{max.x, max.y, max.z}
+	};
+}

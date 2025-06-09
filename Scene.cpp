@@ -205,18 +205,48 @@ void Scene::render()
 {
 	camera.render();
  	renderRoom();
+
+	glm::ivec2 cameraGridCell(floor(getCamera().getPosition().x + mapSize.x/2.f), floor(getCamera().getPosition().z + mapSize.y/2.f));
 	for (TriangleMeshInstance* object : objects) {
 
-		//std::pair<glm::vec3, glm::vec3> bb = object->getBoundingBox();
+		std::pair<glm::vec3, glm::vec3> bb = object->getBoundingBox();
+		glm::vec3 minPoint = bb.first;
+		glm::vec3 maxPoint = bb.second;
 
-		if (lodColoring) {
-			int lodCount = object->lodCount();
-			glm::vec3 hsvColor(1.f);
-			hsvColor.x = object->getLod() * 360.f / float(lodCount);
-			object->render(glm::vec4(glm::rgbColor(hsvColor), 1.f));
+		int minGridX = floor(minPoint.x + mapSize.x/2.f);
+		int minGridZ = floor(minPoint.z + mapSize.y/2.f);
+		int maxGridX = floor(maxPoint.x + mapSize.x/2.f);
+		int maxGridZ = floor(maxPoint.z + mapSize.y/2.f);
+
+		bool isVisible = false;
+		int cameraCellIndex = cameraGridCell.y * mapSize.x + cameraGridCell.x;
+
+		if (cameraCellIndex >= cellsVisibility.size()) {
+			isVisible = true;
 		}
-		else
-			object->render();
+		else {
+			std::set<int>&visibleCells = cellsVisibility[cameraCellIndex];
+			for (int gridX = (std::max)(minGridX, 0); gridX <= (std::min)(maxGridX, mapSize.x) && !isVisible; ++gridX) {
+				for (int gridZ = (std::max)(minGridZ, 0); gridZ <= (std::min)(maxGridZ, mapSize.y) && !isVisible; ++gridZ) {
+					int cellIndex = gridZ * mapSize.x + gridX;
+					if (visibleCells.count(cellIndex) > 0) {
+						isVisible = true;
+					}
+				}
+			}
+		}
+
+		if (isVisible) {
+			if (lodColoring) {
+				int lodCount = object->lodCount();
+				glm::vec3 hsvColor(1.f);
+				hsvColor.x = object->getLod() * 360.f / float(lodCount);
+				object->render(glm::vec4(glm::rgbColor(hsvColor), 1.f));
+			}
+			else
+				object->render();
+		}
+
 	}
 }
 
@@ -343,8 +373,7 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 	int nz = map.size(); // rows
 	int nx = map[0].size(); // columns
 
-	mapSizeX = nx;
-	mapSizeZ = nz;
+	mapSize = glm::ivec2(nx, nz);
 
 	for (int i = 0; i < nz; ++i) {
 		for (int j = 0; j < nx; ++j) {
@@ -354,12 +383,12 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 			switch (map[i][j])
 			{
 			case 0: // Floor
-				transform = glm::translate(transform, glm::vec3(i - nz/2, -0.5f, j - nx/2));
+				transform = glm::translate(transform, glm::vec3(j - nx / 2, -0.5f, i - nz / 2));
 				transform = glm::scale(transform, glm::vec3(1.f, 1.f, 1.f));
 				break;
 			
 			case 1: // Wall
-				transform = glm::translate(transform, glm::vec3(i - nz/2, 1.f, j - nx/2));
+				transform = glm::translate(transform, glm::vec3(j - nx / 2, 1.f, i - nz / 2));
 				transform = glm::scale(transform, glm::vec3(1.f, 2.f, 1.f));
 				break;
 			default:
@@ -414,7 +443,7 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 	}
 
 	if (recomputeVis) {
-		cellsVisibility = Visibility::computeVisibility(map, 101101);
+		cellsVisibility = Visibility::computeVisibility(map, 1000000);
 		Visibility::saveVisibilityFile(cellsVisibility, visibilityPath, nx, nz);
 	}
 }

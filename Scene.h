@@ -60,7 +60,7 @@ private:
 
 	std::vector<std::set<int>> cellsVisibility;
 
-	int mapSizeX, mapSizeZ;
+	glm::ivec2 mapSize;
 };
 
 
