@@ -58,6 +58,7 @@ private:
 	bool lodColoring;
 	int meshSimplificationMethod;
 
+	std::vector<int> lodTimers;
 	std::vector<std::set<int>> cellsVisibility;
 
 	glm::ivec2 mapSize;

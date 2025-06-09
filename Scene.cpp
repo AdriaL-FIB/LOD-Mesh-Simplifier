@@ -17,11 +17,14 @@
 
 #define MAX_COST (400000)
 
+#define N_FRAMES 120
+
 
 Scene::Scene()
 {
 	cube = nullptr;
 	meshSimplificationMethod = 0;
+	mapSize = glm::vec2(0.f, 0.f);
 }
 
 Scene::~Scene()
@@ -90,13 +93,6 @@ bool Scene::loadMap(const string &filename)
 	}
 	initRoom(mapInfo);
 
-	// for (auto a : mapInfo) {
-	// 	for (char c : a) {
-	// 		cout << c;
-	// 	}
-	// 	cout << endl;
-	// }
-
 	int num_models;
 	fin >> num_models;
 
@@ -134,6 +130,8 @@ bool Scene::loadMap(const string &filename)
 		addInstance(meshIndx, transform);
 	}
 	std::cout << "Loaded " << num_instances << " instances." << std::endl;
+	lodTimers.resize(num_instances, 0);
+
 
 	
 	fin.close();
@@ -298,66 +296,83 @@ void Scene::computeLODLevels()
 	std::vector<int> lods(N);
 	std::vector<float> benefits(N);
 
+	std::vector<int> lastLods(N);
+
 	for (int i = 0; i < N; ++i) {
-		int maxLod = objects[i]->lodCount() - 1;
+		lastLods[i] = objects[i]->getLod();
 
-		TriangleMeshInstance* object = objects[i];
-		TriangleMesh* mesh = object->getMesh(maxLod);
-		lods[i] = maxLod;
-		costs[i] = mesh->getNumberOfTriangles();
-		benefits[i] = computeBenefit(object, maxLod);
-		totalCost += costs[i];
-		objects[i]->setLod(maxLod);
-	}
-
-	if (totalCost >= maxCost) return;
-
-	while (true) {
-		// Find object with largest delta benefit / delta cost
-		int best = -1; // LOD to increase
-		float bestRatio = 0;
-		float benefitOfBest = 0;
-		for (int i = 0; i < N; ++i) {
-			int currentLod = lods[i];
-			int nextLod = currentLod - 1;
-			if (nextLod < 0) continue;
-
-			int currentCost = costs[i];
-			float currentBenefit = benefits[i];
-
-			TriangleMeshInstance* object = objects[i];
-			TriangleMesh* mesh = object->getMesh(nextLod);
-
-			int nextCost = mesh->getNumberOfTriangles();
-			int deltaCost = (nextCost - currentCost);
-
-			if (totalCost + deltaCost >= maxCost) continue;
-
-			float nextBenefit = computeBenefit(object, nextLod);
-
-			float ratio = (nextBenefit - currentBenefit) / deltaCost;
-			if (ratio > bestRatio) {
-				bestRatio = ratio;
-				best = i;
-				benefitOfBest = nextBenefit;
-			}
+		lodTimers[i] = (lodTimers[i] > 0) ? lodTimers[i] - 1 : 0;
+		int startingLod;
+		if (lodTimers[i] == 0) {
+			startingLod = objects[i]->lodCount() - 1;
+		}
+		else {
+			startingLod = lastLods[i];
 		}
 
-		if (best < 0) break;
-
-		// Increase level of detail for that object (decrease variable)
-		lods[best]--;
-		objects[best]->setLod(lods[best]);
-
-		// Update total cost
-		int newCost = objects[best]->getMesh()->getNumberOfTriangles(); // cost of the new LOD
-		totalCost += newCost - costs[best]; // increment of cost
-		benefits[best] = benefitOfBest; // update benefit of object with new LOD
-		costs[best] = newCost; // update cost of of object with new LOD
+		TriangleMeshInstance* object = objects[i];
+		TriangleMesh* mesh = object->getMesh(startingLod);
+		lods[i] = startingLod;
+		costs[i] = mesh->getNumberOfTriangles();
+		benefits[i] = computeBenefit(object, startingLod);
+		totalCost += costs[i];
+		objects[i]->setLod(startingLod);
 	}
+
+	if (totalCost < maxCost) {
+		while (true) {
+			// Find object with largest delta benefit / delta cost
+			int best = -1; // LOD to increase
+			float bestRatio = 0;
+			float benefitOfBest = 0;
+			for (int i = 0; i < N; ++i) {
+				int currentLod = lods[i];
+				int nextLod = currentLod - 1;
+				if (nextLod < 0) continue;
+
+				int currentCost = costs[i];
+				float currentBenefit = benefits[i];
+
+				TriangleMeshInstance* object = objects[i];
+				TriangleMesh* mesh = object->getMesh(nextLod);
+
+				int nextCost = mesh->getNumberOfTriangles();
+				int deltaCost = (nextCost - currentCost);
+
+				if (totalCost + deltaCost >= maxCost) continue;
+
+				float nextBenefit = computeBenefit(object, nextLod);
+
+				float ratio = (nextBenefit - currentBenefit) / deltaCost;
+				if (ratio > bestRatio) {
+					bestRatio = ratio;
+					best = i;
+					benefitOfBest = nextBenefit;
+				}
+			}
+
+			if (best < 0) break;
+
+			// Increase level of detail for that object (decrease variable)
+			lods[best]--;
+			objects[best]->setLod(lods[best]);
+
+			// Update total cost
+			int newCost = objects[best]->getMesh()->getNumberOfTriangles(); // cost of the new LOD
+			totalCost += newCost - costs[best]; // increment of cost
+			benefits[best] = benefitOfBest; // update benefit of object with new LOD
+			costs[best] = newCost; // update cost of of object with new LOD
+		}
+	}
+
+
+
 	cout << "LODS:";
 	for (int i = 0; i < N; ++i) {
 		cout << " " << lods[i];
+		if (lods[i] != lastLods[i]) {
+			lodTimers[i] = N_FRAMES;
+		}
 	}
 	cout << " totalCost:" << totalCost << endl;
 }
