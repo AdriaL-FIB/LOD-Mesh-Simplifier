@@ -23,6 +23,7 @@ public:
 	void changePitch(float rotation);
 	void moveForward(float distance);
 	void strafe(float distance);
+	void moveUp(float distance);
 
 	glm::vec3 getPosition() const;
 

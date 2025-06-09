@@ -87,6 +87,12 @@ void VectorCamera::strafe(float distance)
 	computeViewMatrix();
 }
 
+void VectorCamera::moveUp(float distance)
+{
+	position.y = (std::max)(position.y + distance, 0.75f);
+	computeViewMatrix();
+}
+
 glm::vec3 VectorCamera::getPosition() const
 {
 	return position;

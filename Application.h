@@ -48,7 +48,7 @@ private:
 	bool bPlay;						// Continue?
 	Scene scene;					// Scene to render
 	
-	bool directions[4];				// State of directional input
+	bool directions[4 + 2];			// State of directional input
 
 	glm::ivec2 previousMousePos; 	// Previous mouse position
 	bool mouseButtons[3];			// State of mouse buttons

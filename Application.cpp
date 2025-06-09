@@ -57,6 +57,11 @@ bool Application::update(int deltaTime)
 			scene.getCamera().moveForward(-deltaTime / 1000.f * MOVEMENT_SPEED);
 		if(directions[3])
 			scene.getCamera().moveForward(deltaTime / 1000.f * MOVEMENT_SPEED);
+		if(directions[4]) // UP
+			scene.getCamera().moveUp(deltaTime / 1000.f * MOVEMENT_SPEED);
+		if(directions[5]) // DOWN
+			scene.getCamera().moveUp(-deltaTime / 1000.f * MOVEMENT_SPEED);
+
 	}
 	
 	return bPlay;
@@ -106,6 +111,12 @@ void Application::keyPressed(int key)
 	case GLFW_KEY_W:
 		directions[3] = true;
 		break;
+	case GLFW_KEY_Q:
+		directions[4] = true;
+		break;
+	case GLFW_KEY_E:
+		directions[5] = true;
+		break;
 	}
 }
 
@@ -133,6 +144,12 @@ void Application::keyReleased(int key)
 		break;
 	case GLFW_KEY_W:
 		directions[3] = false;
+		break;
+	case GLFW_KEY_Q:
+		directions[4] = false;
+		break;
+	case GLFW_KEY_E:
+		directions[5] = false;
 		break;
 	case GLFW_KEY_F1:
 		bNavigation = !bNavigation;
