@@ -1,3 +1,7 @@
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include <iostream>
 #include "GL/gl3w.h"
 #include <GLFW/glfw3.h>
@@ -98,6 +102,13 @@ int main(int argc, char *argv[])
 	  Application::instance().loadMap(argv[1]);
 	  
 	timePreviousFrame = glfwGetTime();
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
 	
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
