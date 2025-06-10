@@ -19,8 +19,9 @@ execute_process(COMMAND ln -s ../shaders)
 set(appName SRGGE)
 
 set(gl3w_files gl3w/gl3w.c gl3w/GL/gl3w.h)
+set(imgui_files imgui/imgui_draw.cpp imgui/imgui_impl_glfw.cpp imgui/imgui_impl_opengl3.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp imgui/imgui.cpp)
 
-add_executable(${appName} ${gl3w_files} PLYReader.h PLYReader.cpp TriangleMesh.h TriangleMesh.cpp TriangleMeshInstance.h TriangleMeshInstance.cpp VectorCamera.h VectorCamera.cpp Scene.h Scene.cpp Shader.h Shader.cpp ShaderProgram.h ShaderProgram.cpp Application.h Application.cpp main.cpp)
+add_executable(${appName} ${imgui_files} ${gl3w_files} PLYReader.h PLYReader.cpp TriangleMesh.h TriangleMesh.cpp TriangleMeshInstance.h TriangleMeshInstance.cpp VectorCamera.h VectorCamera.cpp Scene.h Scene.cpp Shader.h Shader.cpp ShaderProgram.h ShaderProgram.cpp Application.h Application.cpp Visibility.h Visibility.cpp main.cpp)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 find_package(OpenGL REQUIRED)
@@ -32,6 +33,7 @@ include_directories(${GLFW3_INCLUDE_DIRS})
 include_directories(${GLM_INCLUDE_DIRS})
 include_directories("${CMAKE_SOURCE_DIR}/gl3w")
 include_directories("${CMAKE_SOURCE_DIR}/eigen")
+include_directories("${CMAKE_SOURCE_DIR}/imgui")
 
 link_directories(${OPENGL_LIBRARY_DIRS})
 link_directories(${GLFW3_LIBRARY_DIRS})

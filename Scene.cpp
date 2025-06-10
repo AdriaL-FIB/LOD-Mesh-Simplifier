@@ -170,7 +170,7 @@ bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes, con
 
 		std::vector<std::vector<std::shared_ptr<TriangleMesh>>> meshMethodsLods(NUM_METHODS);
 		for (int method : methods) {
-			assert((method < NUM_METHODS), "Number of subdivision method geater than the total number of methods");
+			assert((method < NUM_METHODS));
 			std::vector<std::shared_ptr<TriangleMesh>>& meshLods = meshMethodsLods.at(method);
 			meshLods.resize(lodRes.size() + 1);
 			meshLods[0] = mesh;
@@ -240,31 +240,13 @@ void Scene::update(int deltaTime)
 		float costFloat = static_cast<float>(MAX_COST);
 
 		ImGui::Text("Max Cost:");
-		ImGui::SliderFloat("", &costFloat,
+		ImGui::SliderFloat("##", &costFloat,
 			static_cast<float>(min_possible_cost[meshSimplificationMethod]),
 			static_cast<float>(max_possible_cost[meshSimplificationMethod]),
 			"%.0f", ImGuiSliderFlags_Logarithmic);
 
 		MAX_COST = static_cast<int>(costFloat);
 
-		//std::string method;
-		//switch (meshSimplificationMethod)
-		//{
-		//case AVG_METHOD:
-		//	method = "Average";
-		//	break;
-		//case AVG_NORMALS_METHOD:
-		//	method = "Average with normals";
-		//	break;
-		//case QEM_METHOD:
-		//	method = "QEM";
-		//	break;
-		//case QEM_NORMALS_METHOD:
-		//	method = "QEM with normals";
-		//	break;
-		//default:
-		//	break;
-		//}
 		ImGui::Text("Simplification method:");
 		ImGui::RadioButton("Average", &meshSimplificationMethod, 0);
 		ImGui::RadioButton("Average with normals", &meshSimplificationMethod, 1);
