@@ -117,12 +117,37 @@ int main(int argc, char *argv[])
 		if (currentTime - timePreviousFrame >= timePerFrame)
 		{
 
-			cout << "FPS: " << (1.0 / (currentTime - timePreviousFrame)) << endl;
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+
+			//cout << "FPS: " << (1.0 / (currentTime - timePreviousFrame)) << endl;
+
+
+			ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.1f, 0.1f, 0.1f, 0.5f));
+
+
+			ImGuiWindowFlags overlay_flags = ImGuiWindowFlags_NoMove |
+				ImGuiWindowFlags_NoSavedSettings | //ImGuiWindowFlags_NoInputs |
+				ImGuiWindowFlags_AlwaysAutoResize;
+
+			ImGui::Begin("UI", nullptr, overlay_flags);
+			ImGui::Text("FPS %.1f", (1.0 / (currentTime - timePreviousFrame)));
+			//ImGui::Text("FPS %.1f", ImGui::GetIO().Framerate);
+
 
 			/* Update & render steps of the game loop */
 			if(!Application::instance().update(int(1000.0f * (currentTime - timePreviousFrame))))
 				glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+
+			ImGui::End();
+			ImGui::PopStyleColor();
+
 			render();
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			timePreviousFrame = currentTime;
 			
 			/* Swap front and back buffers */
@@ -132,6 +157,10 @@ int main(int argc, char *argv[])
 		/* Poll for and process events */
 		glfwPollEvents();
 	}
+
+	ImGui_ImplGlfw_Shutdown();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui::DestroyContext();
 
 	// Shutdown GLFW
 	glfwTerminate();

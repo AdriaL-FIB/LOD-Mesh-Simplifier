@@ -8,16 +8,14 @@
 #include "Application.h"
 #include "Visibility.h"
 
+#include "imgui.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/color_space.hpp>
 
 #include <filesystem>
 
-#define NUM_METHODS 4
-
-#define MAX_COST (50000)
-
-#define N_FRAMES 120
+#define N_FRAMES 60
 
 
 Scene::Scene()
@@ -25,6 +23,8 @@ Scene::Scene()
 	cube = nullptr;
 	meshSimplificationMethod = 0;
 	mapSize = glm::vec2(0.f, 0.f);
+
+	MAX_COST = 400000;
 }
 
 Scene::~Scene()
@@ -132,10 +132,20 @@ bool Scene::loadMap(const string &filename)
 	std::cout << "Loaded " << num_instances << " instances." << std::endl;
 	lodTimers.resize(num_instances, 0);
 	objectVisibility.resize(num_instances, true);
-
-
 	
 	fin.close();
+
+	// compute min and max possible cost
+	for (int m = 0; m < NUM_METHODS; ++m) {
+		min_possible_cost[m] = 0;
+		max_possible_cost[m] = 0;
+		for (TriangleMeshInstance* object : objects) {
+			int i = object->getMeshIndex();
+			auto& lods = meshes[i][m];
+			max_possible_cost[m] += lods[0]->getNumberOfTriangles();
+			min_possible_cost[m] += lods[lods.size() - 1]->getNumberOfTriangles();
+		}
+	}
 	return true;
 }
 
@@ -212,10 +222,56 @@ void Scene::addInstances(int mesh, const std::vector<glm::mat4> &transform)
 	}
 }
 
+bool lod_header_expanded = false;
+
 void Scene::update(int deltaTime)
 {
 	currentTime += deltaTime;
+
+	ImGui::Separator();
+
 	computeObjectVisibility();
+
+	ImGui::Checkbox("LOD Coloring (F2)", &lodColoring);
+
+	lod_header_expanded = ImGui::CollapsingHeader("Mesh Simplification");
+	if (lod_header_expanded) {
+
+		float costFloat = static_cast<float>(MAX_COST);
+
+		ImGui::Text("Max Cost:");
+		ImGui::SliderFloat("", &costFloat,
+			static_cast<float>(min_possible_cost[meshSimplificationMethod]),
+			static_cast<float>(max_possible_cost[meshSimplificationMethod]),
+			"%.0f", ImGuiSliderFlags_Logarithmic);
+
+		MAX_COST = static_cast<int>(costFloat);
+
+		//std::string method;
+		//switch (meshSimplificationMethod)
+		//{
+		//case AVG_METHOD:
+		//	method = "Average";
+		//	break;
+		//case AVG_NORMALS_METHOD:
+		//	method = "Average with normals";
+		//	break;
+		//case QEM_METHOD:
+		//	method = "QEM";
+		//	break;
+		//case QEM_NORMALS_METHOD:
+		//	method = "QEM with normals";
+		//	break;
+		//default:
+		//	break;
+		//}
+		ImGui::Text("Simplification method:");
+		ImGui::RadioButton("Average", &meshSimplificationMethod, 0);
+		ImGui::RadioButton("Average with normals", &meshSimplificationMethod, 1);
+		ImGui::RadioButton("QEM", &meshSimplificationMethod, 2);
+		ImGui::RadioButton("QEM with normals", &meshSimplificationMethod, 3);
+	}
+
 	computeLODLevels();
 }
 
@@ -259,6 +315,7 @@ void Scene::setMeshSimplficationMethod(int method)
 	for (TriangleMeshInstance* object : objects) {
 		int meshIndex = object->getMeshIndex();
 		object->setMesh(&meshes[meshIndex][method]);
+		MAX_COST = std::clamp(MAX_COST, min_possible_cost[method], max_possible_cost[method]);
 	}
 }
 
@@ -319,7 +376,7 @@ void Scene::computeLODLevels()
 		objects[i]->setLod(startingLod);
 	}
 
-	if (totalCost < maxCost) {
+	if (totalCost <= maxCost) {
 		while (true) {
 			// Find object with largest delta benefit / delta cost
 			int best = -1; // LOD to increase
@@ -340,7 +397,7 @@ void Scene::computeLODLevels()
 				int nextCost = mesh->getNumberOfTriangles();
 				int deltaCost = (nextCost - currentCost);
 
-				if (totalCost + deltaCost >= maxCost) continue;
+				if (totalCost + deltaCost > maxCost) continue;
 
 				float nextBenefit = computeBenefit(object, nextLod);
 
@@ -366,7 +423,18 @@ void Scene::computeLODLevels()
 		}
 	}
 
+	if (lod_header_expanded) {
+		ImGui::Text("LODS:");
 
+		std::string str = "";
+		for (int i = 0; i < N; ++i) {
+			if (i > 0) str += " ";
+			if (!objectVisibility[i]) str += "-";
+			else str += std::to_string(lods[i]);
+		}
+		ImGui::Text((str).c_str());
+		ImGui::Text( ("Total cost: " + std::to_string(totalCost)).c_str() );
+	}
 
 	cout << "LODS:";
 	for (int i = 0; i < N; ++i) {
@@ -378,6 +446,7 @@ void Scene::computeLODLevels()
 		}
 	}
 	cout << " totalCost:" << totalCost << endl;
+
 }
 
 void Scene::computeObjectVisibility()

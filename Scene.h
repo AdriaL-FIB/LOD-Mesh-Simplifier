@@ -9,6 +9,8 @@
 #include "TriangleMesh.h"
 #include "TriangleMeshInstance.h"
 
+#define NUM_METHODS 4
+
 
 using namespace std;
 
@@ -58,6 +60,10 @@ private:
 
 	bool lodColoring;
 	int meshSimplificationMethod;
+
+	int MAX_COST;
+	int min_possible_cost[NUM_METHODS];
+	int max_possible_cost[NUM_METHODS];
 
 	std::vector<int> lodTimers;
 	std::vector<std::set<int>> cellsVisibility;
