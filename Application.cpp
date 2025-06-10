@@ -127,6 +127,12 @@ void Application::keyReleased(int key)
 {
 	switch(key)
 	{
+	case GLFW_KEY_1:
+	case GLFW_KEY_2:
+	case GLFW_KEY_3:
+	case GLFW_KEY_4:
+		scene.setMeshSimplficationMethod(key - GLFW_KEY_1);
+		break;
 	case GLFW_KEY_RIGHT:
 	case GLFW_KEY_LEFT:
 	case GLFW_KEY_DOWN:

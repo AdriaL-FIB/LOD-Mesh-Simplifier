@@ -15,7 +15,7 @@
 
 #define NUM_METHODS 4
 
-#define MAX_COST (400000)
+#define MAX_COST (50000)
 
 #define N_FRAMES 120
 
@@ -110,7 +110,7 @@ bool Scene::loadMap(const string &filename)
 		while (ss >> gridRes) {
 			lodRes.push_back(gridRes);
 		}
-		loadMesh(model_filename, lodRes, {0});
+		loadMesh(model_filename, lodRes, {0,1,2,3});
 	}
 	std::cout << "Loaded " << num_models << " models." << std::endl;
 
@@ -156,15 +156,35 @@ bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes, con
 	{
 		mesh->sendToOpenGL();
 
-		std::vector<std::vector<std::shared_ptr<TriangleMesh>>> meshMethodsLods(NUM_METHODS);
+		std::string modelname = std::filesystem::path(filename).stem().string();
 
+		std::vector<std::vector<std::shared_ptr<TriangleMesh>>> meshMethodsLods(NUM_METHODS);
 		for (int method : methods) {
 			assert((method < NUM_METHODS), "Number of subdivision method geater than the total number of methods");
 			std::vector<std::shared_ptr<TriangleMesh>>& meshLods = meshMethodsLods.at(method);
 			meshLods.resize(lodRes.size() + 1);
 			meshLods[0] = mesh;
 			for (int i = 0; i < lodRes.size(); ++i) { // modelname_res_method.ply
-				std::shared_ptr<TriangleMesh> simplifiedMesh(mesh->getSimplifiedMesh(lodRes[i], method));
+
+				bool bSuccessLod = false;
+				std::shared_ptr<TriangleMesh> simplifiedMesh;
+				std::string name = modelname + "_" + std::to_string(lodRes[i]) + "_" + std::to_string(method) + ".ply";
+				std::string path = "../models/LODs/" + name;
+
+				if (std::filesystem::exists(path)) {
+					cout << "Model " << name << " already exists. Reading file..." << endl;
+					simplifiedMesh = std::make_shared<TriangleMesh>();
+					bSuccessLod = reader.readMesh(path, *simplifiedMesh);
+					if (!bSuccessLod) {
+						cerr << "Error reading " << path << endl;
+					}
+				}
+
+				if (!bSuccessLod) {
+					simplifiedMesh = std::shared_ptr<TriangleMesh>(mesh->getSimplifiedMesh(lodRes[i], method));
+					reader.writeMesh(path, *( simplifiedMesh.get()) );
+				}
+
 				simplifiedMesh->sendToOpenGL();
 				meshLods[i+1] = simplifiedMesh;
 			}
@@ -181,7 +201,7 @@ bool Scene::loadMesh(const string &filename, const std::vector<int>& lodRes, con
 void Scene::addInstance(int mesh, const glm::mat4 &transform)
 {
 	TriangleMeshInstance* object = new TriangleMeshInstance();
-	object->init(&meshes[mesh][meshSimplificationMethod], glm::vec4(1.0f), transform);
+	object->init(&meshes[mesh][meshSimplificationMethod], glm::vec4(1.0f), transform, mesh);
 	objects.push_back(object);
 }
 
@@ -364,7 +384,7 @@ void Scene::computeObjectVisibility()
 {
 	glm::ivec2 cameraGridCell(floor(getCamera().getPosition().x + mapSize.x / 2 + 0.5f), floor(getCamera().getPosition().z + mapSize.y / 2 + 0.5f));
 
-	std::cout << "Camera grid cell: (" << cameraGridCell.x << ", " << cameraGridCell.y << "), camPos: (" << getCamera().getPosition().x << "," << getCamera().getPosition().z << ")" << std::endl;
+	//std::cout << "Camera grid cell: (" << cameraGridCell.x << ", " << cameraGridCell.y << "), camPos: (" << getCamera().getPosition().x << "," << getCamera().getPosition().z << ")" << std::endl;
 
 	for (int i = 0; i < objects.size(); ++i) {
 		TriangleMeshInstance* object = objects[i];
@@ -477,7 +497,7 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 	}
 
 	if (recomputeVis) {
-		cellsVisibility = Visibility::computeVisibility(map, 100000);
+		cellsVisibility = Visibility::computeVisibility(map, 1000000);
 		Visibility::saveVisibilityFile(cellsVisibility, visibilityPath, nx, nz);
 	}
 }

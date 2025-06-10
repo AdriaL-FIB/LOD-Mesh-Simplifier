@@ -388,7 +388,8 @@ TriangleMesh* TriangleMesh::getSimplifiedMesh(int gridRes, int method)
 		}
 	}
 
-	cout << "Simplified from " << this->nOfTriangles << " to " << m->nOfTriangles << endl;
+	cout << "Simplified mesh with resolution " << gridRes << " from " << this->getNumberOfTriangles() << " to " << m->getNumberOfTriangles() <<
+		" triangles, from "<< this->vertices.size() << " to " << m->getVertices().size() << " vetices." << endl;
 
 	return m;
 }
