@@ -27,6 +27,8 @@ windows/libs/*
 !windows/libs/eigen
 !windows/libs/freeglut
 !windows/libs/glew-1.13.0
+!windows/libs/glew-1.13.0/lib/Release
+!windows/libs/glew-1.13.0/bin/Release
 !windows/libs/glfw-3.4
 !windows/libs/glm
 !windows/libs/imgui
