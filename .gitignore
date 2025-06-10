@@ -29,6 +29,7 @@ windows/libs/*
 !windows/libs/glew-1.13.0
 !windows/libs/glfw-3.4
 !windows/libs/glm
+!windows/libs/imgui
 
 
 
