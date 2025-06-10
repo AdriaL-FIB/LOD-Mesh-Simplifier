@@ -30,6 +30,7 @@ windows/libs/*
 !windows/libs/glfw-3.4
 !windows/libs/glm
 !windows/libs/imgui
+!windows/libs/gl3w
 
 
 
