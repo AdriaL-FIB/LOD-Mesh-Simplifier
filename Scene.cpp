@@ -16,6 +16,7 @@
 #include <filesystem>
 
 #define N_FRAMES 60
+#define VISIBILITY_RAYS 1000000
 
 
 Scene::Scene()
@@ -548,7 +549,7 @@ void Scene::initRoom(const std::vector<std::vector<char>>& map)
 	}
 
 	if (recomputeVis) {
-		cellsVisibility = Visibility::computeVisibility(map, 1000000);
+		cellsVisibility = Visibility::computeVisibility(map, VISIBILITY_RAYS);
 		Visibility::saveVisibilityFile(cellsVisibility, visibilityPath, nx, nz);
 	}
 }
