@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 cmake_policy(SET CMP0015 NEW)
 cmake_policy(SET CMP0072 NEW)
 
-project(SRGGE)
+project(LODMeshSimplifier)
 
 set (CMAKE_CXX_STANDARD 17)
 
@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 execute_process(COMMAND ln -s ../shaders)
 
-set(appName SRGGE)
+set(appName lodmesh)
 
 set(gl3w_files gl3w/gl3w.c gl3w/GL/gl3w.h)
 set(imgui_files imgui/imgui_draw.cpp imgui/imgui_impl_glfw.cpp imgui/imgui_impl_opengl3.cpp imgui/imgui_tables.cpp imgui/imgui_widgets.cpp imgui/imgui.cpp)

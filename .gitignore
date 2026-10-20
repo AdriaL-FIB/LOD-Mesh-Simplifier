@@ -14,13 +14,13 @@ Release*
 
 windows/*
 
-!windows/SRGGE_BaseCode
+!windows/LOD-Mesh-Simplifier
 
-windows/SRGGE_BaseCode/*
-!windows/SRGGE_BaseCode/SRGGE_BaseCode
-!windows/SRGGE_BaseCode/SRGGE_BaseCode.sln
-!windows/SRGGE_BaseCode/SRGGE_BaseCode/SRGGE_BaseCode.vcxproj
-!windows/SRGGE_BaseCode/SRGGE_BaseCode/SRGGE_BaseCode.vcxproj.filter
+windows/LOD-Mesh-Simplifier/*
+!windows/LOD-Mesh-Simplifier/LOD-Mesh-Simplifier
+!windows/LOD-Mesh-Simplifier/LOD-Mesh-Simplifier.sln
+!windows/LOD-Mesh-Simplifier/LOD-Mesh-Simplifier/LOD-Mesh-Simplifier.vcxproj
+!windows/LOD-Mesh-Simplifier/LOD-Mesh-Simplifier/LOD-Mesh-Simplifier.vcxproj.filters
 
 !windows/libs
 windows/libs/*

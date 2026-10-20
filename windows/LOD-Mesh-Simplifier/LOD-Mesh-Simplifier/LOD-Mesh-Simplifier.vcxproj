@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2A1F2077-F9B0-4454-ACD0-5DA0E16FFEF2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>SRGGE_BaseCode</RootNamespace>
+    <RootNamespace>LODMeshSimplifier</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

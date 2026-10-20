@@ -1,4 +1,4 @@
-# SRGGE Project
+# LOD-Mesh-Simplifier
 
 This is a museum-like scene defined by a map file, processes 3D models for Level of Detail (LOD) using simplification techniques, pre-calculates visibility, and renders the scene. It features dynamic LOD switching and a simple GUI for interaction.
 
@@ -27,11 +27,11 @@ This is a museum-like scene defined by a map file, processes 3D models for Level
     ```bash
     cmake -DCMAKE_BUILD_TYPE=Release .. && make -j
     ```
-    (The executable `SRGGE` will be in the `build` directory).
+    (The executable `lodmesh` will be in the `build` directory).
 
 ### Windows
 
-1.  Open the solution file `windows/SRGGE_BaseCode/SRGGE_BaseCode.sln` with Visual Studio.
+1.  Open the solution file `windows/LOD-Mesh-Simplifier/LOD-Mesh-Simplifier.sln` with Visual Studio.
 2.  Build the solution.
 
 ## Running the Project
@@ -40,7 +40,7 @@ The application requires a `map.txt` file to define the scene.
 
 - **Linux (from the `build` directory):**
     ```bash
-    ./SRGGE ../map.txt
+    ./lodmesh ../map.txt
     ```
     (Assuming `map.txt` is in the project's root directory, one level above `build`.)
 
